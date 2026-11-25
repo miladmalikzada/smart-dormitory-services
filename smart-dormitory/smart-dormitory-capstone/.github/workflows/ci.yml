@@ -10,4 +10,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17', cache: maven }
-      - run: mvn -B verify
+      - name: Build, test, architecture rules, coverage gate
+        run: mvn -B verify
+      - name: Upload test and coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports
+          path: |
+            target/surefire-reports
+            target/site/jacoco

@@ -44,6 +44,11 @@ class EndToEndTest {
         assertTrue(out.contains("Hello - World"));
     }
 
+    @Test void sqliteStorageSurvivesARestart() {
+        run("sqlite", "13\nHello\nWorld\n0\n");
+        assertTrue(run("sqlite", "14\n0\n").contains("Hello - World"));
+    }
+
     @Test void badInputIsReportedNotThrown() {
         assertTrue(run("memory", "2\nnobody\n0\n").contains("Error:"));
         assertTrue(run("memory", "99\n0\n").contains("Unknown option"));

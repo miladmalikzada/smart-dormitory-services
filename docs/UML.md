@@ -248,11 +248,35 @@ stateDiagram-v2
 ## 8. Component / layer diagram
 ```mermaid
 flowchart TB
-  UI[ui] --> SERVICE[service] --> DOMAIN[domain]
+  UI[ui: console] --> SERVICE[service] --> DOMAIN[domain]
+  WEB[web: REST API + website] --> SERVICE
   INFRA[infra] --> SERVICE
   INFRA --> DOMAIN
   INFRA --> DB[("SQLite / file")]
-  APP["App: composition root"] -.creates.-> UI & SERVICE & INFRA
+  APP["App: composition root"] -.creates.-> UI & WEB & SERVICE & INFRA
+```
+
+## 9. Sequence diagram: website request through the REST API (Proxy + State)
+```mermaid
+sequenceDiagram
+  actor U as Staff member
+  participant B as Browser (app.js)
+  participant W as WebServer
+  participant A as Api
+  participant P as SecuredTicketService
+  participant T as TicketService
+  participant DB as SQLite
+  U->>B: click Resolve
+  B->>W: PUT /api/tickets/T-1 {action: resolve} + X-Role STAFF
+  W->>A: handle(PUT, path, body, STAFF)
+  A->>P: resolve(T-1)
+  P->>P: role allowed?
+  P->>T: resolve(T-1)
+  T->>DB: load ticket, state.resolve(), save
+  T-->>A: ticket
+  A-->>W: 200 + JSON
+  W-->>B: JSON
+  B-->>U: status badge RESOLVED
 ```
 
 The entity-relationship diagram is in [DATABASE.md](DATABASE.md).

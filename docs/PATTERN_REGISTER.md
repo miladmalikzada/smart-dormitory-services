@@ -13,8 +13,9 @@
 | 9 | State (Behavioral) | L8 | Ticket status was a string checked in several places | `TicketState`, `TicketStates.*` / `TicketStateTest` | Status enum + switch: no behaviour per state |
 | 10 | Strategy (Behavioral) | L8 | Room-choice rule will change (fill first / spread out) | `RoomAllocationStrategy`, `FirstAvailableStrategy`, `LeastOccupiedStrategy` / `AllocationStrategyTest` | Enum + switch in `RoomService` |
 | 11 | Iterator (Behavioral) | L6 | "Who is still inside?" without exposing the list or repeating filter loops | `VisitorLog`, inner `InsideIterator` / `VisitorLogIteratorTest` | `stream().filter` in each caller |
+| 12 | Template Method (Behavioral) | L6 | Five SQL repositories repeat the same find/list/delete flow | `SqlRepository`, `SqliteRepositories.*` / `SqliteRepositoryTest` | Copy the JDBC code five times |
 
-Category count: Creational 2, Structural 3, Behavioral 6 (requirement: 2 / 2 / 3).
+Category count: Creational 2, Structural 3, Behavioral 7 (requirement: 2 / 2 / 3).
 
 ## Combinations (L7)
 * **Command + Memento** – the command takes a Memento before acting; `undo()` restores it. (ADR-0003)

@@ -40,6 +40,6 @@ public class AssignRoomCommand implements Command {
     @Override public String description() { return "assign " + studentId + " to " + roomId; }
 
     private Room load() {
-        return rooms.findById(roomId).orElseThrow(() -> new IllegalArgumentException("Unknown room " + roomId));
+        return rooms.findById(roomId).orElseThrow(() -> new NotFoundException("Unknown room " + roomId));
     }
 }

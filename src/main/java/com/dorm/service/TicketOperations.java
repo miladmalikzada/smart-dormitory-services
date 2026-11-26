@@ -12,4 +12,6 @@ public interface TicketOperations {
     void start(String ticketId);
     void resolve(String ticketId);
     List<MaintenanceTicket> list();
+    MaintenanceTicket get(String ticketId);
+    void delete(String ticketId);
 }

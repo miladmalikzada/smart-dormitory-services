@@ -17,6 +17,12 @@ public class VisitorEntry implements Entity, Serializable {
         this.arrivedAt = arrivedAt;
     }
 
+    public VisitorEntry(String id, String visitorName, String hostStudentId,
+                        LocalDateTime arrivedAt, LocalDateTime departedAt) {
+        this(id, visitorName, hostStudentId, arrivedAt);
+        this.departedAt = departedAt;
+    }
+
     @Override public String id() { return id; }
     public String visitorName() { return visitorName; }
     public String hostStudentId() { return hostStudentId; }

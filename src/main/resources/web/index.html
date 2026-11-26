@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Dormitory Services</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="brand">Smart Dormitory Services</div>
+    <label class="role">Signed in as
+      <select id="role">
+        <option>STUDENT</option>
+        <option>STAFF</option>
+        <option>ADMIN</option>
+      </select>
+    </label>
+  </header>
+  <nav id="nav">
+    <button data-view="dashboard">Dashboard</button>
+    <button data-view="students">Students</button>
+    <button data-view="rooms">Rooms</button>
+    <button data-view="tickets">Repairs</button>
+    <button data-view="visitors">Visitors</button>
+    <button data-view="announcements">Announcements</button>
+  </nav>
+  <main id="view">Loading...</main>
+  <div id="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>

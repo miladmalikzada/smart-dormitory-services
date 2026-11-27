@@ -5,6 +5,28 @@
 Capstone project for *Application Design Based on Patterns* (topic 7). A secure web and console information system for a
 student dormitory: **student records, room requests, maintenance tickets, visitor log, announcements**.
 
+## Project map
+```text
+smart-dormitory-services/
+├── README.md              start here
+├── pom.xml                Maven build (tests, architecture rules, coverage gate)
+├── .env.example           names of the secrets (the real .env is never committed)
+├── src/main/java/com/dorm/
+│   ├── domain/            entities and rules: Student, Room, Ticket, Iin ...
+│   ├── service/           use cases and most patterns: Strategy, Command, Proxy, Observer ...
+│   ├── infra/             storage and outside world: SQLite, files, encryption, SMS adapter
+│   ├── ui/                console menu
+│   ├── web/               REST API (Api), HTTP server, JSON
+│   └── App.java           the only place where classes are wired together
+├── src/main/resources/
+│   ├── schema.sql         database tables
+│   └── web/               the website: index.html, style.css, app.js
+├── src/test/java/         tests mirror the packages above
+├── docs/                  all documents, start with docs/README.md
+├── scripts/               setup_env.py, run-web.sh, show-db.py (database demo)
+└── .github/               CI workflow, pull request and issue templates
+```
+
 ## Run the website (recommended)
 ```bash
 python3 scripts/setup_env.py       # once: creates the private .env (passwords + encryption key). Never commit it.

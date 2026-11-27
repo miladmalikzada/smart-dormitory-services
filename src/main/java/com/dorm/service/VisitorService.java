@@ -26,7 +26,7 @@ public class VisitorService {
 
     public VisitorEntry arrive(String visitorName, String hostStudentId) {
         if (visitorName == null || visitorName.isBlank()) throw new IllegalArgumentException("visitor name required");
-        students.findById(hostStudentId).orElseThrow(() -> new IllegalArgumentException("Unknown host " + hostStudentId));
+        students.findById(hostStudentId).orElseThrow(() -> new NotFoundException("Unknown host " + hostStudentId));
         VisitorEntry e = new VisitorEntry(Ids.next("V"), visitorName, hostStudentId, LocalDateTime.now(clock));
         entries.save(e);
         events.publish(new DormEvent("VISITOR_ARRIVED", visitorName + " visits " + hostStudentId));
@@ -34,10 +34,20 @@ public class VisitorService {
     }
 
     public void depart(String entryId) {
-        VisitorEntry e = entries.findById(entryId).orElseThrow(() -> new IllegalArgumentException("Unknown entry " + entryId));
+        VisitorEntry e = entries.findById(entryId).orElseThrow(() -> new NotFoundException("Unknown entry " + entryId));
         e.depart(LocalDateTime.now(clock));
         entries.save(e);
         events.publish(new DormEvent("VISITOR_LEFT", e.visitorName() + " left"));
+    }
+
+    public VisitorEntry get(String id) {
+        return entries.findById(id).orElseThrow(() -> new NotFoundException("Unknown entry " + id));
+    }
+
+    public void delete(String id) {
+        get(id);
+        entries.delete(id);
+        events.publish(new DormEvent("VISITOR_DELETED", "Visitor record " + id + " deleted"));
     }
 
     public VisitorLog log() {

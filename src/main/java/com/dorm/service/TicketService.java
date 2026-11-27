@@ -21,7 +21,7 @@ public class TicketService implements TicketOperations {
     }
 
     @Override public MaintenanceTicket create(String roomId, String description, Priority priority) {
-        rooms.findById(roomId).orElseThrow(() -> new IllegalArgumentException("Unknown room " + roomId));
+        rooms.findById(roomId).orElseThrow(() -> new NotFoundException("Unknown room " + roomId));
         MaintenanceTicket t = MaintenanceTicket.builder()
                 .id(Ids.next("T")).roomId(roomId).description(description).priority(priority).build();
         tickets.save(t);
@@ -43,8 +43,18 @@ public class TicketService implements TicketOperations {
 
     @Override public List<MaintenanceTicket> list() { return tickets.findAll(); }
 
+    @Override public MaintenanceTicket get(String id) {
+        return tickets.findById(id).orElseThrow(() -> new NotFoundException("Unknown ticket " + id));
+    }
+
+    @Override public void delete(String id) {
+        get(id);
+        tickets.delete(id);
+        events.publish(new DormEvent("TICKET_DELETED", "Ticket " + id + " was deleted"));
+    }
+
     private void change(String id, Consumer<MaintenanceTicket> action, String type, String message) {
-        MaintenanceTicket t = tickets.findById(id).orElseThrow(() -> new IllegalArgumentException("Unknown ticket " + id));
+        MaintenanceTicket t = tickets.findById(id).orElseThrow(() -> new NotFoundException("Unknown ticket " + id));
         action.accept(t);
         tickets.save(t);
         events.publish(new DormEvent(type, message));

@@ -22,4 +22,15 @@ public final class TicketStates {
     public static final class Resolved implements TicketState {
         public String name() { return "RESOLVED"; }
     }
+
+    /** Rebuilds a state from its stored name (used when loading from a database). */
+    public static TicketState fromName(String name) {
+        return switch (name) {
+            case "OPEN" -> new Open();
+            case "ASSIGNED" -> new Assigned();
+            case "IN_PROGRESS" -> new InProgress();
+            case "RESOLVED" -> new Resolved();
+            default -> throw new IllegalArgumentException("Unknown ticket status " + name);
+        };
+    }
 }

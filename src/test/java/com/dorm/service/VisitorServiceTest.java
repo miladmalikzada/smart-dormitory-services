@@ -17,7 +17,7 @@ class VisitorServiceTest {
 
     @Test void arrivalAndDepartureAreTracked() {
         InMemoryRepository<Student> students = new InMemoryRepository<>();
-        students.save(new Student("S1", "Host", "1"));
+        students.save(Student.basic("S1", "Host", "1"));
         VisitorService s = new VisitorService(new InMemoryRepository<>(), students, new EventPublisher(), Clock.systemUTC());
         VisitorEntry e = s.arrive("Ali", "S1");
         assertTrue(s.log().inside().iterator().hasNext());

@@ -3,6 +3,8 @@ package com.dorm.ui;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.dorm.App;
+import com.dorm.infra.EnvConfig;
+import java.util.Map;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -15,7 +17,7 @@ class EndToEndTest {
 
     private String run(String storage, String script) {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        App.build(storage, tmp, new ByteArrayInputStream(script.getBytes()), new PrintStream(buf)).run();
+        App.build(storage, tmp, new ByteArrayInputStream(script.getBytes()), new PrintStream(buf), EnvConfig.of(Map.of())).run();
         return buf.toString();
     }
 
@@ -42,6 +44,11 @@ class EndToEndTest {
         run("file", "13\nHello\nWorld\n0\n");
         String out = run("file", "14\n0\n");
         assertTrue(out.contains("Hello - World"));
+    }
+
+    @Test void sqliteStorageSurvivesARestart() {
+        run("sqlite", "13\nHello\nWorld\n0\n");
+        assertTrue(run("sqlite", "14\n0\n").contains("Hello - World"));
     }
 
     @Test void badInputIsReportedNotThrown() {

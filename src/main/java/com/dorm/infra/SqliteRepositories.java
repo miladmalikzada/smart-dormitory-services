@@ -29,11 +29,12 @@ public final class SqliteRepositories {
         @Override protected Student map(ResultSet r) throws SQLException {
             String dob = r.getString("date_of_birth");
             int year = r.getInt("course_year");
+            boolean noYear = r.wasNull();   // must be asked right after getInt, before other columns are read
             return new Student(r.getString("id"), r.getString("first_name"), r.getString("last_name"),
                     dob == null ? null : LocalDate.parse(dob), r.getString("gender"), r.getString("nationality"),
                     cipher.decrypt(r.getString("iin")), cipher.decrypt(r.getString("national_id_number")),
                     cipher.decrypt(r.getString("passport_number")), r.getString("phone"), r.getString("email"),
-                    r.getString("faculty"), r.wasNull() ? null : year, r.getString("address"),
+                    r.getString("faculty"), noYear ? null : year, r.getString("address"),
                     r.getString("emergency_contact_name"), r.getString("emergency_contact_phone"));
         }
         @Override protected void upsert(Student s) throws SQLException {

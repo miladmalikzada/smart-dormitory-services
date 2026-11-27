@@ -13,11 +13,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class EndToEndTest {
+    private static final String KEY = com.dorm.infra.AesGcmCipher.generateKey();
     @TempDir Path tmp;
 
     private String run(String storage, String script) {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        App.build(storage, tmp, new ByteArrayInputStream(script.getBytes()), new PrintStream(buf), EnvConfig.of(Map.of())).run();
+        App.build(storage, tmp, new ByteArrayInputStream(script.getBytes()), new PrintStream(buf), EnvConfig.of(Map.of("DORM_ENCRYPTION_KEY", KEY))).run();
         return buf.toString();
     }
 

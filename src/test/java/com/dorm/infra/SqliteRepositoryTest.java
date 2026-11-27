@@ -108,4 +108,11 @@ class SqliteRepositoryTest {
         assertNull(back.courseYear());
         assertNull(back.dateOfBirth());
     }
+
+    @Test void missingCourseYearStaysNullEvenWhenOtherFieldsAreFilled() {
+        var students = students();
+        students.save(new Student("S5", "Ali", "Khan", LocalDate.of(2004, 5, 17), null, null, null, null, null,
+                null, null, "Law", null, null, null, null));
+        assertNull(students.findById("S5").orElseThrow().courseYear());
+    }
 }

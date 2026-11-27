@@ -1,16 +1,20 @@
 # REST API
 
-Base URL: `http://localhost:8080/api`. Data format: JSON. Every request except `POST /api/login` needs the header
+Base URL: `http://localhost:8080/api`. Data format: JSON. Every request except `POST /api/login` and `POST /api/signup` needs the header
 `Authorization: Bearer <token>`. Errors look like `{"error":"message"}`.
 
 | Endpoint | Meaning |
 |---|---|
-| `POST /api/login` `{username, password}` | returns `{token, username, role, expiresAt}` (token valid 8 hours). Wrong password: **401**; 5 wrong attempts in a minute: **429** |
+| `POST /api/login` `{username, password}` | returns `{token, username, role, expiresAt}` (token valid 8 hours). Wrong password: **401**; correct password but account still waiting or declined: **401** with the reason; 5 wrong attempts in a minute: **429** |
+| `POST /api/signup` `{username, password, role}` | public. `role` is `STUDENT`, `STAFF` or `ADMIN`. Returns **201** with `{username, role, status, message}`; `status` is `ACTIVE` for students and `PENDING` for staff and admin. Bad input: **400**; username taken: **409**; too many sign-ups: **429** |
+| `GET /api/accounts` | administrator only (others **403**): all accounts, waiting requests first. Never contains passwords or hashes |
+| `POST /api/accounts/{username}/approve` | administrator only: lets a waiting or switched-off account sign in |
+| `POST /api/accounts/{username}/reject` | administrator only: declines a request or switches an account off and ends its sessions. You cannot change your own account (**400**) |
 | `GET /api/me` | who am I (needs token) |
 | `POST /api/logout` | invalidates the token |
 
-Accounts: `admin` (ADMIN), `staff` (STAFF), `student` (STUDENT). Passwords come from `.env`
-(see [SECURITY.md](SECURITY.md)). Status codes: 400 bad input, 401 not signed in, 403 role not allowed,
+Accounts: the owner account `admin` (password from `.env`), and everyone else who signed up and, for staff and
+admin, was approved (see [SECURITY.md](SECURITY.md)). Status codes: 400 bad input, 401 not signed in, 403 role not allowed,
 404 not found, 405 method, 409 conflict, 413 request over 64 KB, 429 too many logins.
 
 **Student data by role:** ADMIN sees and changes everything. STAFF sees students read-only with IIN, national ID

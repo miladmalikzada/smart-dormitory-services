@@ -15,3 +15,5 @@
 | US11 | As staff I look up a student without seeing full identity numbers | IIN, passport and national ID shown as `********1237` |
 | US12 | As a student I see only the student directory | No IIN, phone, e-mail or address in any response |
 | US13 | As any user I must sign in | No token: 401; wrong password: 401; five wrong tries: 429 |
+| US14 | As a new student I create my own account | Sign-up as student: account is active, I can sign in at once, my password is not stored in clear text |
+| US15 | As the administrator I decide who becomes staff or admin | Staff/admin sign-ups stay PENDING and cannot sign in until I approve them; a declined account is refused; nobody can approve themselves |

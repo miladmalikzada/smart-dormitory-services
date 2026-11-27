@@ -6,7 +6,7 @@ An honest list of what this version does **not** do. Each item says why it was l
 |---|---|---|---|
 | 1 | **Sessions are kept in memory.** A server restart signs everyone out. The login lockout counters are also reset. | One server process, 8-hour tokens, demo scale. | Store sessions in the database (new `sessions` table behind `AuthService`), or use signed tokens. |
 | 2 | **HTTP only, no TLS.** | The app is meant to run behind a reverse proxy (nginx, Caddy) or on localhost. | Terminate TLS at the proxy and set the `Secure` flag on any cookie. |
-| 3 | **No password change, reset or user management screen.** Three fixed accounts come from `.env`. | Keeps secrets out of the database for the demo. | `Account` table with hashed passwords, a change-password endpoint, and an admin screen. |
+| 3 | **No password change or reset, and no e-mail check at sign-up.** Sign-up and approval exist (ADR-0013), but a forgotten password cannot be recovered. | Keeps the first version small. | A change-password endpoint, and a reset that the administrator triggers or an e-mail link. |
 | 4 | **No audit log.** Reads and changes of identity data are not recorded. | The events list only covers business events. | Add an `AuditLog` observer on `SecuredStudentService` that writes who/what/when. |
 | 5 | **Encryption key is one key from `.env`.** There is no rotation. | Per-value random IV already protects against pattern leaks. | Key id stored beside each ciphertext, so old and new keys can both decrypt during rotation. |
 | 6 | **IIN and national ID cannot be searched by partial value** (they are encrypted). | Searching encrypted fields would weaken the protection. | Store a keyed hash (HMAC) next to each value for exact-match lookup. |

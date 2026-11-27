@@ -71,3 +71,14 @@ CREATE VIEW IF NOT EXISTS room_free_beds AS
 SELECT r.id AS room_id, r.capacity, r.capacity - COUNT(o.student_id) AS free_beds
 FROM rooms r LEFT JOIN room_occupants o ON o.room_id = r.id
 GROUP BY r.id;
+
+-- Login accounts. Only a salted PBKDF2 hash of the password is stored.
+-- Students sign up as ACTIVE; staff and admin sign up as PENDING until an administrator approves them.
+CREATE TABLE IF NOT EXISTS accounts (
+  username      TEXT PRIMARY KEY,
+  salt          TEXT NOT NULL,
+  password_hash TEXT NOT NULL,
+  role          TEXT NOT NULL CHECK (role IN ('ADMIN','STAFF','STUDENT')),
+  status        TEXT NOT NULL CHECK (status IN ('ACTIVE','PENDING','REJECTED')),
+  created_at    TEXT NOT NULL
+);

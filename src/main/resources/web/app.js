@@ -23,6 +23,7 @@ const ICONS = {
   wrench: '<path d="M14.5 6.5a4 4 0 0 0 5 5l-9.2 9.2a2.1 2.1 0 0 1-3-3z"/><path d="M14.5 6.5l3-3a4 4 0 0 0-3 3z"/>',
   door: '<path d="M6 21V4h9v17M3 21h18"/><circle cx="12" cy="13" r=".8"/><path d="M15 6l4 1v14"/>',
   bell: '<path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4z"/><path d="M10 21a2 2 0 0 0 4 0"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
 };
 const icon = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
@@ -75,7 +76,7 @@ const person = s => `<div class="cell-person"><span class="avatar">${esc(initial
 const locked = msg => `<div class="locked">${icon('lock').replace('<svg', '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"')} ${msg}</div>`;
 
 /* ---------- pages ---------- */
-const TITLES = { dashboard: 'Dashboard', students: 'Students', rooms: 'Rooms', tickets: 'Repairs', visitors: 'Visitors', announcements: 'Announcements' };
+const TITLES = { dashboard: 'Dashboard', students: 'Students', rooms: 'Rooms', tickets: 'Repairs', visitors: 'Visitors', announcements: 'Announcements', accounts: 'Accounts' };
 
 const views = {
   async dashboard() {
@@ -173,8 +174,27 @@ const views = {
         <div>${esc(a.body)}</div><p class="muted">${when(a.postedAt)} &middot; ${esc(a.id)}</p>
         <div class="row-actions">${btn('Edit', 'edit-ann', a.id, `data-title="${esc(a.title)}" data-body="${esc(a.body)}"`)}${btn('Delete', 'delete-ann', a.id, '', 'danger')}</div></div>`).join('')
         : '<div class="empty">No announcements yet.</div>'}</div>`;
+  },
+  async accounts() {
+    if (!isAdmin()) return locked('Only an administrator can manage accounts.');
+    const list = await api('GET', '/accounts');
+    updatePending(list);
+    const waiting = list.filter(a => a.status === 'PENDING');
+    const status = a => `<span class="badge ${a.status === 'ACTIVE' ? 'good' : a.status === 'PENDING' ? 'warn' : 'bad'}">${a.status === 'ACTIVE' ? 'Active' : a.status === 'PENDING' ? 'Waiting' : 'Declined'}</span>`;
+    const rows = list.map(a => `<tr><td><b>${esc(a.username)}</b></td><td><span class="role-pill">${esc(a.role)}</span></td><td>${status(a)}</td><td>${esc(when(a.createdAt))}</td>
+      <td><div class="row-actions">${a.status !== 'ACTIVE' ? btn('Approve', 'approve-account', a.username, '', 'primary') : ''}
+        ${a.status !== 'REJECTED' && a.username !== me.username ? btn(a.status === 'PENDING' ? 'Decline' : 'Switch off', 'reject-account', a.username, '', 'danger') : ''}</div></td></tr>`);
+    return `${waiting.length ? `<div class="locked">${waiting.length} request${waiting.length > 1 ? 's are' : ' is'} waiting for your approval.</div>` : ''}
+      <div class="card"><h3>Accounts</h3>${table(['Username', 'Type', 'Status', 'Created', ''], rows)}
+      <p class="hint">Students can sign up on their own. Staff and administrator accounts can sign in only after you approve them.</p></div>`;
   }
 };
+
+function updatePending(list) {
+  const n = list.filter(a => a.status === 'PENDING').length;
+  $('pending-count').textContent = n;
+  $('pending-count').hidden = n === 0;
+}
 
 async function show(name) {
   current = name;
@@ -250,6 +270,10 @@ const actions = {
      <div class="modal-foot"><button type="button" data-action="close-modal">Close</button></div>`),
   'get-certificate': async d => { try { download(await api('GET', `/certificates/${d.id}/${d.format}`)); toast('Certificate downloaded'); } catch (e) { toast(e.message, true); } },
   'close-modal': () => closeModal(),
+  'approve-account': d => run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/approve'), 'Account approved'),
+  'reject-account': d => confirm('Decline or switch off ' + d.id + '? They will be signed out.') && run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/reject'), 'Account switched off'),
+  'show-signin': () => authTab('signin'),
+  'show-signup': () => authTab('signup'),
   'add-student': () => openModal('Add student', studentForm(null)),
   'edit-student': async d => { try { openModal('Edit student', studentForm(await api('GET', '/students/' + d.id))); } catch (e) { toast(e.message, true); } },
   'view-student': async d => {
@@ -311,6 +335,8 @@ document.addEventListener('submit', async e => {
     } catch (err) { $('student-error').textContent = err.message; }
   } else if (f.id === 'login-form') {
     await login(f);
+  } else if (f.id === 'signup-form') {
+    await signUp(f);
   } else if (creators[f.id]) {
     creators[f.id](f);
   }
@@ -328,6 +354,9 @@ function showApp() {
   $('who-name').textContent = me.username;
   $('who-role').textContent = me.role;
   $('who-avatar').textContent = me.username[0].toUpperCase();
+  $('nav-accounts').hidden = !isAdmin();
+  if (isAdmin()) api('GET', '/accounts').then(updatePending).catch(() => {});
+  if (current === 'accounts' && !isAdmin()) current = 'dashboard';
   $('today').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   show(current);
 }
@@ -340,7 +369,46 @@ function signOutLocally() {
   $('modal-body').innerHTML = '';
   $('app').hidden = true;
   $('login-screen').hidden = false;
+  authTab('signin');
+}
+
+function authTab(which) {
+  const up = which === 'signup';
+  $('login-form').hidden = up;
+  $('signup-form').hidden = !up;
+  $('tab-signin').classList.toggle('active', !up);
+  $('tab-signup').classList.toggle('active', up);
   $('login-error').textContent = '';
+  $('signup-error').textContent = '';
+  $('signup-ok').textContent = '';
+}
+
+$('signup-role').addEventListener('change', e => {
+  $('signup-hint').textContent = e.target.value === 'STUDENT'
+    ? 'Student accounts are ready immediately.'
+    : 'Staff and administrator accounts must be approved by the administrator before you can sign in.';
+});
+
+async function signUp(f) {
+  $('signup-error').textContent = '';
+  $('signup-ok').textContent = '';
+  const data = form(f);
+  if (data.password !== data.confirm) { $('signup-error').textContent = 'The two passwords are not the same'; return; }
+  delete data.confirm;
+  $('signup-btn').disabled = true;
+  try {
+    const r = await api('POST', '/signup', data);
+    f.reset();
+    if (r.status === 'ACTIVE') {
+      authTab('signin');
+      $('login-user').value = r.username;
+      $('login-error').textContent = '';
+      toast(r.message);
+    } else {
+      $('signup-ok').textContent = r.message;
+    }
+  } catch (err) { $('signup-error').textContent = err.message; }
+  $('signup-btn').disabled = false;
 }
 
 async function login(f) {

@@ -33,9 +33,9 @@ python3 scripts/setup_env.py       # once: creates the private .env (passwords +
 bash scripts/run-web.sh            # website + REST API + SQLite database on http://localhost:8080
 # or:  mvn -q compile exec:java -Dexec.args="--web --storage=sqlite --data=data"
 ```
-Sign in with `admin`, `staff` or `student`; the passwords are inside your `.env` file.
+Open the site. **Create account** lets anyone sign up with a username and password (stored as a salted hash in the SQLite database), choosing *student*, *staff* or *administrator*. Students can sign in at once. **Staff and administrator requests wait until the administrator approves them** on the *Accounts* page. The owner account is `admin`, with the password from your `.env` file.
 In GitHub Codespaces, click **Open in Browser** in the popup, or open the **Ports** tab and the forwarded address of port 8080.
-The three accounts see different data: **admin** manages students (IIN, date of birth, passport no., national ID, contacts...), **staff** sees students with identity numbers masked and handles repairs, **student** sees only the directory. Details: [`docs/SECURITY.md`](docs/SECURITY.md).
+The three account types see different data: **admin** manages students (IIN, date of birth, passport no., national ID, contacts...), **staff** sees students with identity numbers masked and handles repairs, **student** sees only the directory. Details: [`docs/SECURITY.md`](docs/SECURITY.md).
 The REST API is documented in [`docs/API.md`](docs/API.md); the committee checklist is [`docs/REQUIREMENTS_CHECKLIST.md`](docs/REQUIREMENTS_CHECKLIST.md).
 
 ## Run (tests and console version)

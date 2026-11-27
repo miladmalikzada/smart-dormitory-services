@@ -9,7 +9,7 @@ Read in this order if you have ten minutes.
 | 3 | [RESEARCH.md](RESEARCH.md) | What similar systems and options did we study? |
 | 4 | [UML.md](UML.md) | How is it designed? (12 diagrams: use cases, classes, sequences) |
 | 5 | [PATTERN_REGISTER.md](PATTERN_REGISTER.md) | Which design patterns, where, and which ones we rejected |
-| 6 | [adr/](adr/) | Why was each important decision taken? (12 short records) |
+| 6 | [adr/](adr/) | Why was each important decision taken? (13 short records) |
 | 7 | [DATABASE.md](DATABASE.md) | What is in the database? (ER diagram, encryption) |
 | 8 | [API.md](API.md) | Which REST endpoints exist and who may call them? |
 | 9 | [SECURITY.md](SECURITY.md) | How are passwords, secrets and personal data protected? |

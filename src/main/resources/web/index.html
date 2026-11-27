@@ -19,15 +19,38 @@
         <li>Full audit trail of every change</li>
       </ul>
     </div>
-    <form id="login-form" class="login-card" autocomplete="off">
-      <h2>Welcome back</h2>
-      <p class="muted">Sign in to continue</p>
-      <label>Username<input name="username" id="login-user" required autofocus></label>
-      <label>Password<input name="password" type="password" required></label>
-      <div id="login-error" class="form-error" role="alert"></div>
-      <button class="primary wide" id="login-btn">Sign in</button>
-      <p class="hint">Accounts: <b>admin</b>, <b>staff</b>, <b>student</b>. Passwords are in your private <code>.env</code> file.</p>
-    </form>
+    <div class="login-card">
+      <div class="tabs" role="tablist">
+        <button type="button" id="tab-signin" class="tab active" data-action="show-signin" role="tab">Sign in</button>
+        <button type="button" id="tab-signup" class="tab" data-action="show-signup" role="tab">Create account</button>
+      </div>
+      <form id="login-form" class="auth-form" autocomplete="off">
+        <h2>Welcome back</h2>
+        <p class="muted">Sign in with the username and password you created.</p>
+        <label>Username<input name="username" id="login-user" required autofocus></label>
+        <label>Password<input name="password" type="password" required></label>
+        <div id="login-error" class="form-error" role="alert"></div>
+        <button class="primary wide" id="login-btn">Sign in</button>
+        <p class="hint">New here? Choose <b>Create account</b>.</p>
+      </form>
+      <form id="signup-form" class="auth-form" autocomplete="off" hidden>
+        <h2>Create your account</h2>
+        <p class="muted">Pick a username and a password of at least 8 characters.</p>
+        <label>Username<input name="username" id="signup-user" required minlength="3" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9._-]{2,31}" title="3-32 letters, digits, dots, dashes or underscores"></label>
+        <label>Password<input name="password" type="password" required minlength="8" maxlength="128"></label>
+        <label>Repeat password<input name="confirm" type="password" required minlength="8" maxlength="128"></label>
+        <label>I am a
+          <select name="role" id="signup-role">
+            <option value="STUDENT">Student</option>
+            <option value="STAFF">Staff member</option>
+            <option value="ADMIN">Administrator</option>
+          </select></label>
+        <p class="hint" id="signup-hint">Student accounts are ready immediately.</p>
+        <div id="signup-error" class="form-error" role="alert"></div>
+        <div id="signup-ok" class="form-ok" role="status"></div>
+        <button class="primary wide" id="signup-btn">Create account</button>
+      </form>
+    </div>
   </section>
 
   <div id="app" class="shell" hidden>
@@ -40,6 +63,7 @@
         <button data-view="tickets"><i data-icon="wrench"></i>Repairs</button>
         <button data-view="visitors"><i data-icon="door"></i>Visitors</button>
         <button data-view="announcements"><i data-icon="bell"></i>Announcements</button>
+        <button data-view="accounts" id="nav-accounts" hidden><i data-icon="key"></i>Accounts <span id="pending-count" class="badge warn" hidden></span></button>
       </nav>
       <div class="sidebar-foot">
         <div class="who"><span class="avatar" id="who-avatar">?</span>

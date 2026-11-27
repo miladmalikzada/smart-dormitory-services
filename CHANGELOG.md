@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0 - sign-up and account approval
+- Sign-up page: username, password and account type (student, staff, administrator). Accounts and password hashes are stored in the SQLite `accounts` table.
+- Students are active at once; staff and administrator requests wait for approval by the owner administrator (new *Accounts* page, API `/api/signup` and `/api/accounts`).
+- Only the `admin` account from `.env` exists at the start. `DORM_STAFF_PASSWORD` and `DORM_STUDENT_PASSWORD` are no longer used.
+
 ## 1.1.0 - security, student records, certificates
 - Login with expiring Bearer tokens; accounts and the encryption key come from the private `.env` file.
 - Student records: IIN (validated), date of birth, national ID, passport, contacts, study and emergency data.

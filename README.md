@@ -82,6 +82,9 @@ Dependencies point inward and are enforced by `ArchitectureTest` (ArchUnit).
 | `ui` | `ConsoleMenu` – console interface, calls services only |
 | `web` | REST API (`Api`), HTTP server, JSON; the website files are in `src/main/resources/web` |
 
+## Design and pictures
+The website uses its own small design system in `src/main/resources/web/style.css` and original SVG illustrations in `src/main/resources/web/img/` (campus scene, dashboard banner, one picture per page). To use a real photo on the sign-in page, copy it to that folder (for example `login-photo.jpg`) and change the `url(img/hero-campus.svg)` line in the `.login-art` rule. Only use photos you own or that have a free licence.
+
 ## Patterns used (details: [docs/PATTERN_REGISTER.md](docs/PATTERN_REGISTER.md))
 Factory Method, Builder, Adapter, Decorator, Proxy, Observer, Command, Memento, State, Strategy, Iterator, Template Method
 (12 patterns; combinations: Command + Memento, Factory Method + Decorator). Rejected: Singleton, Visitor, Facade.

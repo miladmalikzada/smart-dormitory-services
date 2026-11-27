@@ -21,7 +21,8 @@ public class WebServer {
     static final int MAX_BODY = 64 * 1024;
     private static final Map<String, String> TYPES = Map.of(
             "html", "text/html; charset=utf-8", "css", "text/css; charset=utf-8",
-            "js", "application/javascript; charset=utf-8", "svg", "image/svg+xml", "ico", "image/x-icon");
+            "js", "application/javascript; charset=utf-8", "svg", "image/svg+xml", "ico", "image/x-icon",
+            "png", "image/png", "jpg", "image/jpeg", "jpeg", "image/jpeg", "webp", "image/webp");
 
     private final HttpServer server;
     private final Api api;

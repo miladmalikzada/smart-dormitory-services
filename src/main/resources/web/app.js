@@ -77,12 +77,33 @@ const locked = msg => `<div class="locked">${icon('lock').replace('<svg', '<svg 
 
 /* ---------- pages ---------- */
 const TITLES = { dashboard: 'Dashboard', students: 'Students', rooms: 'Rooms', tickets: 'Repairs', visitors: 'Visitors', announcements: 'Announcements', accounts: 'Accounts' };
+const SUBTITLES = {
+  dashboard: 'A quick look at the whole dormitory.',
+  students: 'Records, rooms and certificates for every resident.',
+  rooms: 'Beds, occupants and free space.',
+  tickets: 'Report a problem and follow it until it is fixed.',
+  visitors: 'Who is inside the building right now.',
+  announcements: 'News for all residents, sent to every channel.',
+  accounts: 'Approve staff and administrator requests.'
+};
+const ART = { dashboard: 'dashboard', students: 'students', rooms: 'rooms', tickets: 'repairs', visitors: 'visitors', announcements: 'announcements', accounts: 'accounts' };
+const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
+const ROLE_NOTE = {
+  ADMIN: 'You have full access: students, rooms, repairs and accounts.',
+  STAFF: 'You can handle repairs, visitors and look up students (identity numbers are masked).',
+  STUDENT: 'You can see the student directory, request a room and report problems.'
+};
 
 const views = {
   async dashboard() {
     const [s, events] = await Promise.all([api('GET', '/summary'), api('GET', '/events')]);
-    const stat = (n, label, ic) => `<div class="stat"><span class="ico">${icon(ic)}</span><b>${s[n]}</b><span>${label}</span></div>`;
-    return `<div class="cards">${stat('students', 'Students', 'users')}${stat('rooms', 'Rooms', 'bed')}${stat('freeBeds', 'Free beds', 'bed')}
+    let n = 0;
+    const stat = (key, label, ic) => `<div class="stat c${++n}"><span class="ico">${icon(ic)}</span><b>${s[key]}</b><span>${label}</span></div>`;
+    const quick = isAdmin() ? btn('+ Add student', 'add-student', '', '', 'light') + btn('Review accounts', 'goto', 'accounts', '', 'ghost-light')
+      : btn('Report a repair', 'goto', 'tickets', '', 'light') + btn('See students', 'goto', 'students', '', 'ghost-light');
+    return `<section class="hero"><div><span class="eyebrow">${greeting()}</span><h2>Welcome, ${esc(me.username)}</h2>
+        <p>${ROLE_NOTE[me.role] || ''}</p><div class="row-actions left">${quick}</div></div></section>
+      <div class="cards">${stat('students', 'Students', 'users')}${stat('rooms', 'Rooms', 'bed')}${stat('freeBeds', 'Free beds', 'bed')}
       ${stat('openTickets', 'Open repairs', 'wrench')}${stat('visitorsInside', 'Visitors inside', 'door')}${stat('announcements', 'Announcements', 'bell')}</div>
       <div class="card"><h3>Recent activity</h3>${events.length
         ? `<div class="activity">${events.map(e => `<div><span class="tag">${esc(e.type.replace(/_/g, ' '))}</span><span>${esc(e.message)}</span></div>`).join('')}</div>`
@@ -199,6 +220,8 @@ function updatePending(list) {
 async function show(name) {
   current = name;
   $('page-title').textContent = TITLES[name];
+  $('page-sub').textContent = SUBTITLES[name] || '';
+  $('page-art').src = 'img/' + (ART[name] || 'dashboard') + '.svg';
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   try { view.innerHTML = await views[name](); }
   catch (e) { if (me) view.innerHTML = '<div class="card">Could not load data: ' + esc(e.message) + '</div>'; }
@@ -270,6 +293,7 @@ const actions = {
      <div class="modal-foot"><button type="button" data-action="close-modal">Close</button></div>`),
   'get-certificate': async d => { try { download(await api('GET', `/certificates/${d.id}/${d.format}`)); toast('Certificate downloaded'); } catch (e) { toast(e.message, true); } },
   'close-modal': () => closeModal(),
+  'goto': d => show(d.id),
   'approve-account': d => run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/approve'), 'Account approved'),
   'reject-account': d => confirm('Decline or switch off ' + d.id + '? They will be signed out.') && run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/reject'), 'Account switched off'),
   'show-signin': () => authTab('signin'),

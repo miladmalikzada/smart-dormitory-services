@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0 - professional design
+- New design system: dark gradient sidebar, card layout, colour-coded dashboard statistics, refined tables, buttons, badges and forms.
+- Sign-in page with an illustrated campus scene; welcome banner on the dashboard; a small picture and subtitle on every page; friendly empty states.
+- Original SVG illustrations in `src/main/resources/web/img/` (no third-party images, so no licence issues).
+- Mobile layout fixed: scrolling menu, no sideways overflow. The server can now also serve PNG, JPEG and WebP pictures.
+
 ## 1.2.0 - sign-up and account approval
 - Sign-up page: username, password and account type (student, staff, administrator). Accounts and password hashes are stored in the SQLite `accounts` table.
 - Students are active at once; staff and administrator requests wait for approval by the owner administrator (new *Accounts* page, API `/api/signup` and `/api/accounts`).

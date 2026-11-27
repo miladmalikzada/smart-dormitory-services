@@ -13,8 +13,21 @@ erDiagram
   STUDENTS ||--o{ VISITORS : "hosts"
   STUDENTS {
     text id PK
-    text name
+    text first_name
+    text last_name
+    text date_of_birth
+    text gender "MALE FEMALE"
+    text nationality
+    text iin "ENCRYPTED"
+    text national_id_number "ENCRYPTED"
+    text passport_number "ENCRYPTED"
     text phone
+    text email
+    text faculty
+    int course_year "1-8"
+    text address
+    text emergency_contact_name
+    text emergency_contact_phone
   }
   ROOMS {
     text id PK
@@ -69,3 +82,17 @@ SELECT id, room_id, description FROM tickets WHERE priority = 'URGENT' AND statu
 -- visitors still inside
 SELECT visitor_name, host_student_id, arrived_at FROM visitors WHERE departed_at IS NULL;
 ```
+
+## Personal data and encryption
+Student records hold personal data, so three columns are protected:
+
+| Column | Protection |
+|---|---|
+| `iin`, `national_id_number`, `passport_number` | Encrypted by the application with **AES-256-GCM** before they are written. A stolen `dorm.db` shows only random-looking text. |
+| other columns | Stored as normal text (names, faculty, phone...) so SQL reports still work. |
+
+* The key is `DORM_ENCRYPTION_KEY` in the private `.env` file (never in Git). Every value has its own random IV.
+* Because the same number encrypts to different text each time, SQL `UNIQUE` cannot be used on these columns;
+  `StudentService` checks uniqueness instead (tested in `ApiTest.duplicateIdentityNumbersAreRejected`).
+* Run `python3 scripts/show-db.py` to show the professor the encrypted columns next to the readable ones.
+* An older `data/dorm.db` (before this change) has a different `students` table: delete the `data/` folder once.

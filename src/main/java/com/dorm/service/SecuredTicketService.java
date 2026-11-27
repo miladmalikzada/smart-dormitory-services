@@ -28,6 +28,9 @@ public class SecuredTicketService implements TicketOperations {
     @Override public void resolve(String ticketId) { requireStaff(); target.resolve(ticketId); }
     @Override public List<MaintenanceTicket> list() { return target.list(); }
 
+    @Override public MaintenanceTicket get(String ticketId) { return target.get(ticketId); }
+    @Override public void delete(String ticketId) { requireStaff(); target.delete(ticketId); }
+
     private void requireStaff() {
         if (session.role() == Role.STUDENT) {
             throw new AccessDeniedException("Only STAFF or ADMIN may change tickets");

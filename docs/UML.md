@@ -248,11 +248,147 @@ stateDiagram-v2
 ## 8. Component / layer diagram
 ```mermaid
 flowchart TB
-  UI[ui] --> SERVICE[service] --> DOMAIN[domain]
+  UI[ui: console] --> SERVICE[service] --> DOMAIN[domain]
+  WEB[web: REST API + website] --> SERVICE
   INFRA[infra] --> SERVICE
   INFRA --> DOMAIN
   INFRA --> DB[("SQLite / file")]
-  APP["App: composition root"] -.creates.-> UI & SERVICE & INFRA
+  APP["App: composition root"] -.creates.-> UI & WEB & SERVICE & INFRA
+```
+
+## 9. Sequence diagram: website request through the REST API (Proxy + State)
+```mermaid
+sequenceDiagram
+  actor U as Staff member
+  participant B as Browser (app.js)
+  participant W as WebServer
+  participant A as Api
+  participant P as SecuredTicketService
+  participant T as TicketService
+  participant DB as SQLite
+  U->>B: click Resolve
+  B->>W: PUT /api/tickets/T-1 {action: resolve} + X-Role STAFF
+  W->>A: handle(PUT, path, body, STAFF)
+  A->>P: resolve(T-1)
+  P->>P: role allowed?
+  P->>T: resolve(T-1)
+  T->>DB: load ticket, state.resolve(), save
+  T-->>A: ticket
+  A-->>W: 200 + JSON
+  W-->>B: JSON
+  B-->>U: status badge RESOLVED
 ```
 
 The entity-relationship diagram is in [DATABASE.md](DATABASE.md).
+
+## 10. Class diagram: security and student data
+```mermaid
+classDiagram
+  class StudentOperations {
+    <<interface>>
+    +register(data)
+    +list()
+    +get(id)
+    +update(id, data)
+    +delete(id)
+  }
+  class StudentService
+  class SecuredStudentService
+  class FieldCipher {
+    <<interface>>
+    +encrypt(plain)
+    +decrypt(stored)
+  }
+  class AesGcmCipher
+  class AuthService {
+    +login(user, password)
+    +authenticate(token)
+    +logout(token)
+  }
+  class EnvConfig {
+    +load(path)
+    +require(key)
+  }
+  class Student {
+    <<record>>
+    id
+    firstName
+    lastName
+    dateOfBirth
+    iin
+    nationalId
+    passportNumber
+    +masked()
+    +directoryView()
+  }
+  class Iin {
+    +isValid(iin)
+    +birthDate(iin)
+  }
+  class Api {
+    +handleRequest(method, path, body, authorization)
+  }
+  class Students
+  StudentOperations <|.. StudentService
+  StudentOperations <|.. SecuredStudentService
+  SecuredStudentService --> StudentOperations : delegates
+  FieldCipher <|.. AesGcmCipher
+  Students --> FieldCipher : encrypts 3 columns
+  StudentService --> Student
+  StudentService ..> Iin : validates
+  Api --> AuthService : token to role
+  Api --> StudentOperations
+  EnvConfig ..> AuthService : passwords
+  EnvConfig ..> AesGcmCipher : key
+```
+
+## 11. Sequence diagram: sign in and read a student (security)
+```mermaid
+sequenceDiagram
+  actor U as Browser
+  participant W as WebServer
+  participant A as Api
+  participant AU as AuthService
+  participant P as SecuredStudentService
+  participant S as StudentService
+  participant DB as SQLite (encrypted columns)
+  U->>W: POST /api/login (user, password)
+  W->>A: handleRequest
+  A->>AU: login (PBKDF2 check, lockout)
+  AU-->>U: token + role
+  U->>W: GET /api/students/S-1 (Bearer token)
+  W->>A: handleRequest
+  A->>AU: authenticate(token) = STAFF
+  A->>P: get(S-1) with role STAFF
+  P->>S: get(S-1)
+  S->>DB: SELECT (AES-GCM decrypt)
+  S-->>P: full student
+  P-->>U: masked student (********1237)
+```
+
+## 12. Class diagram: certificates (Strategy + Proxy)
+```mermaid
+classDiagram
+  class CertificateOperations {
+    <<interface>>
+    +issue(studentId, formatId)
+    +formats()
+  }
+  class CertificateService
+  class SecuredCertificateService
+  class CertificateFormat {
+    <<interface>>
+    +id()
+    +render(certificate)
+  }
+  class TextCertificateFormat
+  class HtmlCertificateFormat
+  class CsvCertificateFormat
+  CertificateOperations <|.. CertificateService
+  CertificateOperations <|.. SecuredCertificateService
+  SecuredCertificateService --> CertificateOperations : delegates
+  CertificateService --> CertificateFormat : picks by id
+  CertificateFormat <|.. TextCertificateFormat
+  CertificateFormat <|.. HtmlCertificateFormat
+  CertificateFormat <|.. CsvCertificateFormat
+```

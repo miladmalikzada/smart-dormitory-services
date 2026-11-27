@@ -25,7 +25,7 @@ public class RoomService {
 
     public Student registerStudent(String name, String phone) {
         if (name == null || name.isBlank()) throw new IllegalArgumentException("name required");
-        Student s = new Student(Ids.next("S"), name, phone);
+        Student s = Student.basic(Ids.next("S"), name, phone);
         students.save(s);
         return s;
     }
@@ -38,13 +38,21 @@ public class RoomService {
 
     /** Room request: picks a room with the strategy and runs an undoable command. */
     public Room requestRoom(String studentId) {
-        students.findById(studentId).orElseThrow(() -> new IllegalArgumentException("Unknown student " + studentId));
+        students.findById(studentId).orElseThrow(() -> new NotFoundException("Unknown student " + studentId));
         boolean housed = rooms.findAll().stream().anyMatch(r -> r.houses(studentId));
         if (housed) throw new IllegalStateException(studentId + " already has a room");
         Room chosen = strategy.choose(rooms.findAll())
                 .orElseThrow(() -> new IllegalStateException("No free room available"));
         history.execute(new AssignRoomCommand(rooms, events, chosen.id(), studentId));
         return rooms.findById(chosen.id()).orElseThrow();
+    }
+
+    /** Check a student out of the room where they live (undoable). @return the room id */
+    public String checkOut(String studentId) {
+        Room room = rooms.findAll().stream().filter(r -> r.houses(studentId)).findFirst()
+                .orElseThrow(() -> new IllegalStateException(studentId + " does not have a room"));
+        history.execute(new VacateRoomCommand(rooms, events, room.id(), studentId));
+        return room.id();
     }
 
     public Optional<String> undoLast() { return history.undoLast(); }

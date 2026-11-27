@@ -16,5 +16,6 @@ Read in this order if you have ten minutes.
 | 10 | [REQUIREMENTS_CHECKLIST.md](REQUIREMENTS_CHECKLIST.md) | Where is each thing the committee asked for? |
 
 For the defence: [DEFENCE_PREP.md](DEFENCE_PREP.md) (questions and answers) and [DB_DEMO.md](DB_DEMO.md) (database demo script).
-For the team: [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md) and [reflection-TEMPLATE.md](reflection-TEMPLATE.md).
+Known gaps and future work: [LIMITATIONS.md](LIMITATIONS.md).
+For the team: [FRIEND_GUIDE.md](FRIEND_GUIDE.md), [TEAM_WORKFLOW.md](TEAM_WORKFLOW.md) and [reflection-TEMPLATE.md](reflection-TEMPLATE.md).
 Demo data for SQLite: [sample_data.sql](sample_data.sql).

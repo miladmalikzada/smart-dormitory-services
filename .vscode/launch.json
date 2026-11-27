@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Website + API (SQLite) - press F5",
+      "request": "launch",
+      "mainClass": "com.dorm.App",
+      "args": "--web --port=8080 --storage=sqlite --data=data",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "java",
+      "name": "Website + API (in memory, no database file)",
+      "request": "launch",
+      "mainClass": "com.dorm.App",
+      "args": "--web --port=8080 --storage=memory",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "java",
+      "name": "Console menu (in memory)",
+      "request": "launch",
+      "mainClass": "com.dorm.App",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

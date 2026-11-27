@@ -1,0 +1,8 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Create .env (first time)", "type": "shell", "command": "python3 scripts/setup_env.py", "problemMatcher": [] },
+    { "label": "Run all tests (mvn verify)", "type": "shell", "command": "mvn -B verify", "group": "test", "problemMatcher": [] },
+    { "label": "Show database (demo)", "type": "shell", "command": "python3 scripts/show-db.py", "problemMatcher": [] }
+  ]
+}

@@ -36,6 +36,16 @@ public class MaintenanceTicket implements Entity, Serializable {
     public void start() { state = state.start(); }
     public void resolve() { state = state.resolve(); }
 
+    /** Rebuilds a stored ticket, including its state, without replaying the lifecycle. */
+    public static MaintenanceTicket restore(String id, String roomId, String description, Priority priority,
+                                            LocalDateTime createdAt, String status, String technician) {
+        MaintenanceTicket t = builder().id(id).roomId(roomId).description(description)
+                .priority(priority).createdAt(createdAt).build();
+        t.state = TicketStates.fromName(status);
+        t.technician = technician;
+        return t;
+    }
+
     public static Builder builder() { return new Builder(); }
 
     /** Builder (L9): validates required fields and gives defaults for optional ones. */

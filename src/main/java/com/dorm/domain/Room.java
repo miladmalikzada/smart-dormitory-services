@@ -29,6 +29,10 @@ public class Room implements Entity, Serializable {
         occupants.add(studentId);
     }
 
+    public void vacate(String studentId) {
+        if (!occupants.remove(studentId)) throw new IllegalStateException(studentId + " does not live in " + id);
+    }
+
     /** Memento: opaque snapshot, only Room can read it. */
     public Memento save() { return new Memento(new ArrayList<>(occupants)); }
 

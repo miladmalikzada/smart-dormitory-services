@@ -96,4 +96,4 @@ Factory Method, Builder, Adapter, Decorator, Proxy, Observer, Command, Memento, 
 JUnit 5, ArchUnit, JaCoCo (test/build only), sqlite-jdbc (runtime, database driver). Encryption and password hashing use the JDK itself (`javax.crypto`). No library implements a pattern for us.
 
 ## Documents
-`docs/API.md`, `docs/SECURITY.md`, `docs/REQUIREMENTS_CHECKLIST.md`, `docs/RESEARCH.md`, `docs/UML.md` (8 diagrams), `docs/DATABASE.md` (ER diagram, schema), `docs/DB_DEMO.md` (database demo script), `scripts/show-db.py`, `docs/USER_STORIES.md`, `docs/PATTERN_REGISTER.md`, `docs/adr/`, `docs/TEAM_WORKFLOW.md`, `docs/DEFENCE_PREP.md`.
+`docs/API.md`, `docs/SECURITY.md`, `docs/REQUIREMENTS_CHECKLIST.md`, `docs/RESEARCH.md`, `docs/UML.md` (12 diagrams), `docs/DATABASE.md` (ER diagram, schema), `docs/DB_DEMO.md` (database demo script), `scripts/show-db.py`, `docs/USER_STORIES.md`, `docs/PATTERN_REGISTER.md`, `docs/adr/`, `docs/TEAM_WORKFLOW.md`, `docs/DEFENCE_PREP.md`, `docs/LIMITATIONS.md`, `docs/FRIEND_GUIDE.md`.

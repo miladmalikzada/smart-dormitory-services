@@ -22,7 +22,7 @@ import com.dorm.service.RateLimitedException;
 import com.dorm.service.StudentData;
 import com.dorm.service.StudentOperations;
 import com.dorm.service.NotFoundException;
-import com.dorm.service.RoomAdminService;
+import com.dorm.service.RoomAdminOperations;
 import com.dorm.service.RoomService;
 import com.dorm.service.SessionContext;
 import com.dorm.service.TicketOperations;
@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * REST API logic (no sockets here, so it can be unit-tested). It only calls services.
@@ -49,7 +50,7 @@ public class Api {
     private final StudentOperations students;
     private final AuthService auth;
     private final CertificateOperations certificates;
-    private final RoomAdminService roomAdmin;
+    private final RoomAdminOperations roomAdmin;
     private final RoomService rooms;
     private final TicketOperations tickets;
     private final VisitorService visitors;
@@ -57,7 +58,7 @@ public class Api {
     private final SessionContext session;
     private final AuditLogListener audit;
 
-    public Api(AuthService auth, CertificateOperations certificates, StudentOperations students, RoomAdminService roomAdmin, RoomService rooms, TicketOperations tickets,
+    public Api(AuthService auth, CertificateOperations certificates, StudentOperations students, RoomAdminOperations roomAdmin, RoomService rooms, TicketOperations tickets,
                VisitorService visitors, AnnouncementService announcements, SessionContext session, AuditLogListener audit) {
         this.auth = auth;
         this.certificates = certificates;
@@ -201,7 +202,7 @@ public class Api {
     private Response students(String m, String id, Map<String, Object> b) {
         return switch (m) {
             case "GET" -> ok(id == null ? students.list().stream().map(this::json).toList() : json(students.get(id)));
-            case "POST" -> created(json(students.register(studentData(b))));
+            case "POST" -> created(registerStudent(b));
             case "PUT" -> ok(json(students.update(need(id), studentData(b))));
             case "DELETE" -> { students.delete(need(id)); yield deleted(id); }
             default -> notAllowed();
@@ -209,6 +210,25 @@ public class Api {
     }
 
     /** GET /api/certificates/{studentId}/{text|html|csv} */
+    /** Registers a student; with "assignRoom" set, also places them in the room the allocation strategy picks. */
+    private Map<String, Object> registerStudent(Map<String, Object> b) {
+        Student s = students.register(studentData(b));
+        Map<String, Object> out = new LinkedHashMap<>(json(s));
+        if (flag(b, "assignRoom")) {
+            try {
+                out.put("roomId", rooms.requestRoom(s.id()).id());
+            } catch (IllegalStateException e) {
+                out.put("roomMessage", "No free room is available. Add a room or free a bed, then use Request room.");
+            }
+        }
+        return out;
+    }
+
+    private static boolean flag(Map<String, Object> b, String key) {
+        Object v = b.get(key);
+        return v instanceof Boolean x ? x : v != null && Set.of("true", "on", "yes").contains(String.valueOf(v).toLowerCase());
+    }
+
     private Response certificate(String m, String studentId, String format) {
         if (!m.equals("GET")) return notAllowed();
         return ok(document(certificates.issue(need(studentId), format == null ? "text" : format)));

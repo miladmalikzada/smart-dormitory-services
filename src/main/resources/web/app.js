@@ -146,12 +146,15 @@ const views = {
     const rows = rooms.map(r => `<tr><td><b>${esc(r.id)}</b></td>
       <td><div class="bar"><i class="${fill(r)}"></i></div><small class="muted">${r.capacity - r.freeBeds} / ${r.capacity} beds used</small></td>
       <td>${r.occupants.map(o => `<span class="chip">${esc(name(o))}<button type="button" data-action="checkout" data-id="${esc(o)}" data-room="${esc(r.id)}" title="Check out">&times;</button></span>`).join('') || '<span class="muted">empty</span>'}</td>
-      <td><div class="row-actions">${btn('Capacity', 'edit-room', r.id, `data-cap="${r.capacity}"`)}${btn('Delete', 'delete-room', r.id, '', 'danger')}</div></td></tr>`);
-    return `<div class="card"><h3>Add a room</h3><form class="inline-form" id="f-room">
+      <td><div class="row-actions">${isAdmin() ? btn('Capacity', 'edit-room', r.id, `data-cap="${r.capacity}"`) + btn('Delete', 'delete-room', r.id, '', 'danger') : ''}</div></td></tr>`);
+    const addRoom = isAdmin() ? `<div class="card"><h3>Add a room</h3><form class="inline-form" id="f-room">
         <label>Room number<input name="id" required placeholder="R301"></label>
-        <label>Capacity<input name="capacity" type="number" min="1" value="2" required></label>
+        <label>Number of beds (capacity)<input name="capacity" type="number" min="1" max="20" value="2" required></label>
         <button class="primary">Add room</button>
-        <button type="button" data-action="undo">Undo last room action</button></form></div>
+        <button type="button" data-action="undo">Undo last room action</button></form>
+        <p class="hint">You can change the number of beds later with the Capacity button on a room.</p></div>`
+      : locked('Only an administrator can add rooms or change how many beds a room has.');
+    return `${addRoom}
       <div class="card">${table(['Room', 'Occupancy', 'Residents', ''], rows)}</div>`;
   },
 
@@ -255,6 +258,9 @@ function studentForm(s) {
       ${field('Faculty', 'faculty', s.faculty, 'placeholder="Information Systems"')}
       <label>Course year${sel('courseYear', s.courseYear == null ? '' : String(s.courseYear), [['', '-'], ...[1, 2, 3, 4, 5, 6].map(n => [String(n), 'Year ' + n])])}</label>
     </div></fieldset>
+    ${edit ? '' : `<fieldset><legend>Accommodation</legend>
+      <label class="check"><input type="checkbox" name="assignRoom" checked> Give this student a room automatically (the room with the most free beds)</label>
+    </fieldset>`}
     <fieldset><legend>Emergency contact</legend><div class="grid2">
       ${field('Contact name', 'emergencyName', s.emergencyName)}${field('Contact phone', 'emergencyPhone', s.emergencyPhone, 'type="tel"')}
     </div></fieldset></div>
@@ -348,21 +354,28 @@ const creators = {
 document.addEventListener('submit', async e => {
   e.preventDefault();
   const f = e.target;
-  if (f.id === 'f-student') {
+  // f.id would return the <input name="id"> of the room form, so read the attribute instead
+  const fid = f.getAttribute('id');
+  if (fid === 'f-student') {
     const data = form(f);
     if (data.courseYear === '') delete data.courseYear;
     try {
-      if (f.dataset.id) await api('PUT', '/students/' + f.dataset.id, data); else await api('POST', '/students', data);
+      let msg = 'Student updated';
+      if (f.dataset.id) await api('PUT', '/students/' + f.dataset.id, data);
+      else {
+        const r = await api('POST', '/students', data);
+        msg = r.roomId ? `Student added and placed in room ${r.roomId}` : r.roomMessage ? 'Student added. ' + r.roomMessage : 'Student added';
+      }
       closeModal();
-      toast(f.dataset.id ? 'Student updated' : 'Student added');
+      toast(msg);
       await show('students');
     } catch (err) { $('student-error').textContent = err.message; }
-  } else if (f.id === 'login-form') {
+  } else if (fid === 'login-form') {
     await login(f);
-  } else if (f.id === 'signup-form') {
+  } else if (fid === 'signup-form') {
     await signUp(f);
-  } else if (creators[f.id]) {
-    creators[f.id](f);
+  } else if (creators[fid]) {
+    creators[fid](f);
   }
 });
 

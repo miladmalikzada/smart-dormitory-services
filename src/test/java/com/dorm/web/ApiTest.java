@@ -104,20 +104,20 @@ class ApiTest {
     }
 
     @Test void roomCrudAndSafetyRules() {
-        assertEquals(201, call("POST", "/api/rooms", "{\"id\":\"R9\",\"capacity\":9}").status());
-        assertEquals(409, call("POST", "/api/rooms", "{\"id\":\"R9\",\"capacity\":2}").status());
-        assertEquals(10, ((Number) obj(call("PUT", "/api/rooms/R9", "{\"capacity\":10}")).get("capacity")).intValue());
+        assertEquals(201, call("POST", "/api/rooms", "{\"id\":\"R9\",\"capacity\":9}", Role.ADMIN).status());
+        assertEquals(409, call("POST", "/api/rooms", "{\"id\":\"R9\",\"capacity\":2}", Role.ADMIN).status());
+        assertEquals(10, ((Number) obj(call("PUT", "/api/rooms/R9", "{\"capacity\":10}", Role.ADMIN)).get("capacity")).intValue());
 
         String student = newStudent("Dana");
         call("POST", "/api/room-requests", "{\"studentId\":\"" + student + "\"}");   // strategy picks R9 (most free beds)
         assertEquals(List.of(student), obj(call("GET", "/api/rooms/R9", null)).get("occupants"));
 
-        assertEquals(409, call("DELETE", "/api/rooms/R9", null).status());              // not empty
-        assertEquals(409, call("PUT", "/api/rooms/R9", "{\"capacity\":0}").status());   // smaller than residents
+        assertEquals(409, call("DELETE", "/api/rooms/R9", null, Role.ADMIN).status());              // not empty
+        assertEquals(409, call("PUT", "/api/rooms/R9", "{\"capacity\":0}", Role.ADMIN).status());   // smaller than residents
         assertEquals(409, call("DELETE", "/api/students/" + student, null, Role.ADMIN).status());   // still has a room
 
         assertEquals(200, call("DELETE", "/api/rooms/R9/occupants/" + student, null).status());
-        assertEquals(200, call("DELETE", "/api/rooms/R9", null).status());
+        assertEquals(200, call("DELETE", "/api/rooms/R9", null, Role.ADMIN).status());
         assertEquals(200, call("DELETE", "/api/students/" + student, null, Role.ADMIN).status());
     }
 
@@ -224,5 +224,50 @@ class ApiTest {
         assertEquals(403, call("GET", "/api/export/students", null, Role.STUDENT).status());
         assertEquals(404, call("GET", "/api/export/rooms", null, Role.ADMIN).status());
         assertEquals(405, call("POST", "/api/export/students", null, Role.ADMIN).status());
+    }
+
+    // ---- rooms: administrator only; automatic room for a new student ----
+
+    @Test void onlyAnAdministratorCanAddResizeAndDeleteRooms() {
+        for (Role role : new Role[] {Role.STAFF, Role.STUDENT}) {
+            assertEquals(403, call("POST", "/api/rooms", "{\"id\":\"R900\",\"capacity\":2}", role).status());
+            assertEquals(403, call("PUT", "/api/rooms/R101", "{\"capacity\":3}", role).status());
+            assertEquals(403, call("DELETE", "/api/rooms/R101", null, role).status());
+            assertEquals(200, call("GET", "/api/rooms", null, role).status());          // everybody may look
+        }
+        assertEquals(201, call("POST", "/api/rooms", "{\"id\":\"R900\",\"capacity\":4}", Role.ADMIN).status());
+        assertEquals(4, obj(call("GET", "/api/rooms/R900", null, Role.ADMIN)).get("capacity"));
+        assertEquals(5, obj(call("PUT", "/api/rooms/R900", "{\"capacity\":5}", Role.ADMIN)).get("capacity"));
+        assertEquals(409, call("POST", "/api/rooms", "{\"id\":\"R900\",\"capacity\":2}", Role.ADMIN).status());   // duplicate
+        assertEquals(200, call("DELETE", "/api/rooms/R900", null, Role.ADMIN).status());
+    }
+
+    @Test void aNewStudentGetsARoomWhenAsked() {
+        Api.Response r = call("POST", "/api/students", studentJson("Ayan", 0).replace("}", ",\"assignRoom\":\"on\"}"), Role.ADMIN);
+        assertEquals(201, r.status());
+        String room = (String) obj(r).get("roomId");
+        assertNotNull(room);
+        assertNull(obj(r).get("roomMessage"));
+        Map<String, Object> shown = obj(call("GET", "/api/rooms/" + room, null, Role.ADMIN));
+        assertEquals(List.of(obj(r).get("id")), shown.get("occupants"));
+    }
+
+    @Test void studentsAreNotPlacedUnlessAskedAndFullHousesGiveAClearMessage() {
+        Api.Response plain = call("POST", "/api/students", studentJson("Ayan", 0), Role.ADMIN);
+        assertNull(obj(plain).get("roomId"));
+        assertNull(obj(plain).get("roomMessage"));
+
+        // leave exactly one bed in the whole dormitory
+        call("DELETE", "/api/rooms/R101", null, Role.ADMIN);
+        call("DELETE", "/api/rooms/R102", null, Role.ADMIN);
+        call("PUT", "/api/rooms/R201", "{\"capacity\":1}", Role.ADMIN);
+
+        Api.Response first = call("POST", "/api/students", studentJson("Dana", 1).replace("}", ",\"assignRoom\":true}"), Role.ADMIN);
+        assertEquals("R201", obj(first).get("roomId"));
+        Api.Response second = call("POST", "/api/students", studentJson("Timur", 2).replace("}", ",\"assignRoom\":true}"), Role.ADMIN);
+        assertEquals(201, second.status());                                   // the student is still saved
+        assertNull(obj(second).get("roomId"));
+        assertTrue(String.valueOf(obj(second).get("roomMessage")).contains("No free room"));
+        assertEquals(3, ((List<?>) call("GET", "/api/students", null, Role.ADMIN).body()).size());
     }
 }

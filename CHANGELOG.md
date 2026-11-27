@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1 - rooms and automatic room for new students
+- Fix: the *Add room* form on the Rooms page did nothing (an input called `id` hid the form's own id). Admins can add rooms and set their number of beds again.
+- Security: adding, resizing and deleting rooms is now ADMIN only (new `SecuredRoomAdminService`); before, any role could call the API. Staff and students see rooms read-only.
+- New students can be given a room automatically (tick box in the Add student form, `assignRoom` in the API); a full dormitory gives a clear message and the student is still saved.
+
 ## 1.3.0 - professional design
 - New design system: dark gradient sidebar, card layout, colour-coded dashboard statistics, refined tables, buttons, badges and forms.
 - Sign-in page with an illustrated campus scene; welcome banner on the dashboard; a small picture and subtitle on every page; friendly empty states.

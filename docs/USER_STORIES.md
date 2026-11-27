@@ -17,3 +17,5 @@
 | US13 | As any user I must sign in | No token: 401; wrong password: 401; five wrong tries: 429 |
 | US14 | As a new student I create my own account | Sign-up as student: account is active, I can sign in at once, my password is not stored in clear text |
 | US15 | As the administrator I decide who becomes staff or admin | Staff/admin sign-ups stay PENDING and cannot sign in until I approve them; a declined account is refused; nobody can approve themselves |
+| US16 | As the administrator I add rooms and set how many beds each has | Only ADMIN can add, resize or delete a room; staff and students get 403 but can look at rooms |
+| US17 | As the administrator I want a new student to get a room straight away | With "give a room automatically" ticked, the student is placed in the room with most free beds; if the dormitory is full the student is still saved and I see a clear message |

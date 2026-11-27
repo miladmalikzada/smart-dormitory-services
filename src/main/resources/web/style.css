@@ -196,6 +196,8 @@ legend { font-size: 12px; text-transform: uppercase; letter-spacing: .9px; color
 .toolbar .search { min-width: 280px; }
 .toolbar label span { display: flex; gap: 8px; align-items: center; font-weight: 500; }
 .toolbar input[type=checkbox] { width: auto; }
+.check { display: flex; gap: 10px; align-items: center; font-weight: 500; }
+.check input { width: auto; }
 
 @media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, 1fr); } .page-art { height: 72px; } }
 @media (max-width: 900px) {

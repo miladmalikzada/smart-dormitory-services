@@ -22,8 +22,8 @@ and passport **masked** (`********1237`). STUDENT sees only a directory entry (i
 
 | Resource | GET (read) | POST (create) | PUT (update) | DELETE |
 |---|---|---|---|---|
-| `/students` | list / `/{id}` | student fields below (ADMIN only) | `/{id}` same fields (ADMIN only; identity numbers left out keep their value) | `/{id}` (ADMIN only; refused while housed or hosting visitors) |
-| `/rooms` | list / `/{id}` | `{id, capacity}` | `/{id}` `{capacity}` | `/{id}` (only empty rooms without tickets); `/{id}/occupants/{studentId}` checks a student out |
+| `/students` | list / `/{id}` | student fields below (ADMIN only). Add `"assignRoom": true` to also place the new student in the room with the most free beds: the answer then has `roomId`, or `roomMessage` when no bed is free (the student is still saved) | `/{id}` same fields (ADMIN only; identity numbers left out keep their value) | `/{id}` (ADMIN only; refused while housed or hosting visitors) |
+| `/rooms` | list / `/{id}` (everybody) | `{id, capacity}` (ADMIN only) | `/{id}` `{capacity}` (ADMIN only) | `/{id}` (ADMIN only; only empty rooms without tickets); `/{id}/occupants/{studentId}` checks a student out |
 | `/room-requests` | - | `{studentId}` assigns a room (Strategy + Command); `/undo` undoes the last room action (Memento) | - | - |
 | `/tickets` | list / `/{id}` | `{roomId, description, priority}` | `/{id}` `{action: assign/start/resolve, technician}` (State; STAFF/ADMIN only via Proxy) | `/{id}` (STAFF/ADMIN) |
 | `/visitors` | list / `/inside` / `/{id}` | `{visitorName, hostStudentId}` | `/{id}` records departure | `/{id}` |

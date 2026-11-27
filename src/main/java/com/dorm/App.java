@@ -35,7 +35,9 @@ import com.dorm.service.EventPublisher;
 import com.dorm.service.LeastOccupiedStrategy;
 import com.dorm.service.NotificationChannel;
 import com.dorm.service.NotificationListener;
+import com.dorm.service.RoomAdminOperations;
 import com.dorm.service.RoomAdminService;
+import com.dorm.service.SecuredRoomAdminService;
 import com.dorm.service.RoomService;
 import com.dorm.service.SecuredTicketService;
 import com.dorm.service.SessionContext;
@@ -67,7 +69,7 @@ public final class App {
     private App() { }
 
     /** Everything the user interfaces need, wired once. */
-    public record Services(RoomService rooms, StudentOperations students, RoomAdminService roomAdmin,
+    public record Services(RoomService rooms, StudentOperations students, RoomAdminOperations roomAdmin,
                            TicketOperations tickets, VisitorService visitors, AnnouncementService announcements,
                            SessionContext session, AuditLogListener audit, Api api) { }
 
@@ -153,7 +155,7 @@ public final class App {
         // The owner's account always comes from .env, so nobody can lock the owner out.
         String adminPassword = cfg.get("DORM_ADMIN_PASSWORD");
         if (adminPassword != null) auth.addAccount("admin", adminPassword, Role.ADMIN);
-        RoomAdminService roomAdmin = new RoomAdminService(roomRepo, ticketRepo);
+        RoomAdminOperations roomAdmin = new SecuredRoomAdminService(new RoomAdminService(roomRepo, ticketRepo), session);
         TicketOperations tickets = new SecuredTicketService(new TicketService(ticketRepo, roomRepo, events), session);
         VisitorService visitors = new VisitorService(visitorRepo, studentRepo, events, clock);
         AnnouncementService announcements = new AnnouncementService(announcementRepo, events, clock);

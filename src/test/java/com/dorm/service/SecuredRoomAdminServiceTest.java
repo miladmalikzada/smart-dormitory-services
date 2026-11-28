@@ -44,4 +44,11 @@ class SecuredRoomAdminServiceTest {
         assertThrows(AccessDeniedException.class, () -> rooms.delete("R301"));
         assertEquals(1, rooms.list().size());
     }
+
+    @Test void theProxyFollowsTheRoleOfTheCurrentSession() {
+        session.switchTo(Role.STUDENT);
+        assertThrows(AccessDeniedException.class, () -> rooms.create("R301", 2));
+        session.switchTo(Role.ADMIN);
+        assertEquals("R301", rooms.create("R301", 2).id());
+    }
 }

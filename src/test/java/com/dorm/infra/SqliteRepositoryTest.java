@@ -152,4 +152,16 @@ class SqliteRepositoryTest {
         assertNotNull(auth2.login("aida", "my-new-secret-2"));
         assertThrows(com.dorm.service.AuthenticationException.class, () -> auth2.login("aida", "my-secret-1"));
     }
+
+    @Test void resetPasswordSurvivesReopeningTheDatabase() {
+        var auth = new com.dorm.service.AuthService(java.time.Clock.systemUTC(), new SqliteAccountStore(db));
+        auth.addAccount("admin", "owner-pass-1", com.dorm.domain.Role.ADMIN);
+        auth.signUp("aida", "my-secret-1", com.dorm.domain.Role.STUDENT);
+        String temporary = auth.resetPassword("admin", "aida");
+
+        Connection again = SqliteDatabase.open(tmp.resolve("test.db"));   // "restart the server"
+        var auth2 = new com.dorm.service.AuthService(java.time.Clock.systemUTC(), new SqliteAccountStore(again));
+        assertNotNull(auth2.login("aida", temporary));
+        assertThrows(com.dorm.service.AuthenticationException.class, () -> auth2.login("aida", "my-secret-1"));
+    }
 }

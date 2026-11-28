@@ -235,4 +235,17 @@ class AuthServiceTest {
         String temporary = auth.resetPassword("admin", "aida");
         assertNotNull(auth.login("aida", temporary));
     }
+
+    @Test void nobodyCanResetTheirOwnAccountOrAMissingOne() {
+        assertThrows(IllegalArgumentException.class, () -> auth.resetPassword("admin", "admin"));
+        assertThrows(NotFoundException.class, () -> auth.resetPassword("admin", "ghost"));
+        assertNotNull(auth.login("admin", "correct-horse"));   // unchanged
+    }
+
+    @Test void aResetWorksForDeclinedAccountsButTheyStayDeclined() {
+        auth.signUp("maria", "long-enough-1", Role.STAFF);
+        auth.reject("admin", "maria");
+        String temporary = auth.resetPassword("admin", "maria");
+        assertThrows(AuthenticationException.class, () -> auth.login("maria", temporary));   // still declined
+    }
 }

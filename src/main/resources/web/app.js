@@ -382,6 +382,14 @@ document.addEventListener('submit', async e => {
       toast(msg);
       await show('students');
     } catch (err) { $('student-error').textContent = err.message; }
+  } else if (fid === 'f-password') {
+    const data = form(f);
+    if (data.newPassword !== data.confirmPassword) { $('password-error').textContent = 'The two new passwords do not match'; return; }
+    try {
+      await api('POST', '/me/password', { oldPassword: data.oldPassword, newPassword: data.newPassword });
+      closeModal();
+      toast('Password changed. Your other sessions were signed out.');
+    } catch (err) { $('password-error').textContent = err.message; }
   } else if (fid === 'login-form') {
     await login(f);
   } else if (fid === 'signup-form') {

@@ -211,7 +211,7 @@ const views = {
         ${a.status !== 'REJECTED' && a.username !== me.username ? btn(a.status === 'PENDING' ? 'Decline' : 'Switch off', 'reject-account', a.username, '', 'danger') : ''}</div></td></tr>`);
     return `${waiting.length ? `<div class="locked">${waiting.length} request${waiting.length > 1 ? 's are' : ' is'} waiting for your approval.</div>` : ''}
       <div class="card"><h3>Accounts</h3>${table(['Username', 'Type', 'Status', 'Created', ''], rows)}
-      <p class="hint">Students can sign up on their own. Staff and administrator accounts can sign in only after you approve them.</p></div>`;
+      <p class="hint">Students can sign up on their own. Staff and administrator accounts can sign in only after you approve them. If someone forgot their password, press <b>Reset password</b> and give them the temporary one.</p></div>`;
   }
 };
 

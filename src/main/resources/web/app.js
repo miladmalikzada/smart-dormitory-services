@@ -207,10 +207,11 @@ const views = {
     const status = a => `<span class="badge ${a.status === 'ACTIVE' ? 'good' : a.status === 'PENDING' ? 'warn' : 'bad'}">${a.status === 'ACTIVE' ? 'Active' : a.status === 'PENDING' ? 'Waiting' : 'Declined'}</span>`;
     const rows = list.map(a => `<tr><td><b>${esc(a.username)}</b></td><td><span class="role-pill">${esc(a.role)}</span></td><td>${status(a)}</td><td>${esc(when(a.createdAt))}</td>
       <td><div class="row-actions">${a.status !== 'ACTIVE' ? btn('Approve', 'approve-account', a.username, '', 'primary') : ''}
+        ${a.username !== me.username && a.status !== 'PENDING' ? btn('Reset password', 'reset-password', a.username) : ''}
         ${a.status !== 'REJECTED' && a.username !== me.username ? btn(a.status === 'PENDING' ? 'Decline' : 'Switch off', 'reject-account', a.username, '', 'danger') : ''}</div></td></tr>`);
     return `${waiting.length ? `<div class="locked">${waiting.length} request${waiting.length > 1 ? 's are' : ' is'} waiting for your approval.</div>` : ''}
       <div class="card"><h3>Accounts</h3>${table(['Username', 'Type', 'Status', 'Created', ''], rows)}
-      <p class="hint">Students can sign up on their own. Staff and administrator accounts can sign in only after you approve them.</p></div>`;
+      <p class="hint">Students can sign up on their own. Staff and administrator accounts can sign in only after you approve them. If someone forgot their password, press <b>Reset password</b> and give them the temporary one.</p></div>`;
   }
 };
 
@@ -314,6 +315,15 @@ const actions = {
   'goto': d => show(d.id),
   'approve-account': d => run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/approve'), 'Account approved'),
   'reject-account': d => confirm('Decline or switch off ' + d.id + '? They will be signed out.') && run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/reject'), 'Account switched off'),
+  'reset-password': async d => {
+    if (!confirm('Create a new temporary password for ' + d.id + '? Their old password stops working and they are signed out.')) return;
+    try {
+      const r = await api('POST', '/accounts/' + encodeURIComponent(d.id) + '/reset-password');
+      openModal('Temporary password', `<div class="modal-body"><p>Give this password to <b>${esc(r.username)}</b>. It is shown only once. They should change it after signing in.</p>
+        <p><code class="temp-password">${esc(r.temporaryPassword)}</code></p></div>
+        <div class="modal-foot"><button class="primary" data-action="close-modal">Done</button></div>`);
+    } catch (e) { toast(e.message, true); }
+  },
   'show-signin': () => authTab('signin'),
   'show-signup': () => authTab('signup'),
   'add-student': () => openModal('Add student', studentForm(null)),

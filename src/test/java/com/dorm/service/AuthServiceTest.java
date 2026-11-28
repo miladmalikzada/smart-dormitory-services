@@ -194,4 +194,58 @@ class AuthServiceTest {
         assertEquals(AccountStatus.ACTIVE, auth.listAccounts().stream()
                 .filter(a -> a.username().equals("maria")).findFirst().orElseThrow().status());
     }
+
+    @Test void temporaryPasswordsAreLongRandomAndEasyToRead() {
+        String a = auth.generateTemporaryPassword();
+        String b = auth.generateTemporaryPassword();
+        assertEquals(AuthService.TEMPORARY_PASSWORD_LENGTH, a.length());
+        assertNotEquals(a, b);
+        assertTrue(a.matches("[a-zA-Z2-9]+") && !a.matches(".*[lIO].*"), a);
+    }
+
+    @Test void resetGivesATemporaryPasswordAndTheOldOneStops() {
+        auth.signUp("aida", "aida-pass-1", Role.STUDENT);
+        String temporary = auth.resetPassword("admin", "aida");
+        assertNotNull(auth.login("aida", temporary));
+        assertThrows(AuthenticationException.class, () -> auth.login("aida", "aida-pass-1"));
+    }
+
+    @Test void resetKeepsRoleAndStatus() {
+        auth.signUp("maria", "long-enough-1", Role.STAFF);
+        auth.approve("admin", "maria");
+        auth.resetPassword("admin", "maria");
+        AccountView v = auth.listAccounts().stream().filter(a -> a.username().equals("maria")).findFirst().orElseThrow();
+        assertEquals(Role.STAFF, v.role());
+        assertEquals(AccountStatus.ACTIVE, v.status());
+    }
+
+    @Test void resetSignsTheUserOutEverywhere() {
+        auth.signUp("aida", "aida-pass-1", Role.STUDENT);
+        String token = auth.login("aida", "aida-pass-1").token();
+        auth.resetPassword("admin", "aida");
+        assertTrue(auth.authenticate(token).isEmpty());
+    }
+
+    @Test void resetAlsoEndsALockout() {
+        auth.signUp("aida", "aida-pass-1", Role.STUDENT);
+        for (int i = 0; i < AuthService.MAX_FAILURES; i++) {
+            assertThrows(AuthenticationException.class, () -> auth.login("aida", "guess"));
+        }
+        assertThrows(RateLimitedException.class, () -> auth.login("aida", "aida-pass-1"));
+        String temporary = auth.resetPassword("admin", "aida");
+        assertNotNull(auth.login("aida", temporary));
+    }
+
+    @Test void nobodyCanResetTheirOwnAccountOrAMissingOne() {
+        assertThrows(IllegalArgumentException.class, () -> auth.resetPassword("admin", "admin"));
+        assertThrows(NotFoundException.class, () -> auth.resetPassword("admin", "ghost"));
+        assertNotNull(auth.login("admin", "correct-horse"));   // unchanged
+    }
+
+    @Test void aResetWorksForDeclinedAccountsButTheyStayDeclined() {
+        auth.signUp("maria", "long-enough-1", Role.STAFF);
+        auth.reject("admin", "maria");
+        String temporary = auth.resetPassword("admin", "maria");
+        assertThrows(AuthenticationException.class, () -> auth.login("maria", temporary));   // still declined
+    }
 }

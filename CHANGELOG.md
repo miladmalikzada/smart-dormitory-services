@@ -1,15 +1,12 @@
 # Changelog
 
-## Unreleased - change password
-
-* Signed-in users can change their own password: `POST /api/me/password` and a form on the website.
-  The current password is required, wrong tries count toward the login lockout, and other sessions end.
-* Known limitation 3 now only lists password *reset*.
-
-## Unreleased - floor allocation strategy
-
-* New `FloorStrategy`: fills one floor before the next (floor read from the room id, R101 is floor 1).
-  It is not the default; to use it, change `new LeastOccupiedStrategy()` to `new FloorStrategy()` in `App.wire`.
+## 1.4.0 - passwords, floor strategy, tests and documents
+* **Reset password:** an administrator can give an account a random temporary password (`POST /api/accounts/{user}/reset-password`, button on the Accounts page). The old password stops working, the user's sessions end and their lockout is cleared. ADR-0015.
+* **Change password:** signed-in users change their own password (`POST /api/me/password`, form on the website). The current password is required, wrong tries count toward the login lockout, and other sessions end.
+* **Floor strategy:** new `FloorStrategy` fills one floor before the next (R101 is floor 1). It is not the default; change `new LeastOccupiedStrategy()` to `new FloorStrategy()` in `App.wire` to use it.
+* **Tests:** iterator, API validation, request size, room administration proxy, account store, sign-up limits and 12 students asking for 7 beds over real HTTP.
+* **Documents:** acceptance criteria for US1-US19, UML diagrams 13-15, ADR-0014 and ADR-0015, pattern table in the README.
+* **Fixes in the documents:** the database has 7 tables (README and DB demo said 6).
 
 ## 1.3.1 - rooms and automatic room for new students
 - Fix: the *Add room* form on the Rooms page did nothing (an input called `id` hid the form's own id). Admins can add rooms and set their number of beds again.

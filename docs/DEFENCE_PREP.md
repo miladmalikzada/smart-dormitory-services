@@ -30,3 +30,6 @@ In `SecuredRoomAdminService`, a Protection Proxy. It implements the same `RoomAd
 
 **How does a new staff or admin account get its rights, and what stops someone signing up as admin?**
 A sign-up only creates a request. Students are `ACTIVE` at once; staff and admin start as `PENDING` and cannot sign in until an administrator approves them on the Accounts page (`AuthService.approve`). Nobody can approve or reject their own account, the number of waiting requests is capped at 50, and sign-ups are limited to 20 per minute. The owner account `admin` comes from `.env` at every start, so the owner cannot be locked out. See ADR-0013, UML diagrams 13 and 15, and `AuthLimitsTest`.
+
+**A user forgot their password. What happens, and can the administrator read it?**
+No. Passwords are stored only as salted PBKDF2 hashes, so nobody can read them. On the Accounts page the administrator presses *Reset password* (`AuthService.resetPassword`). The server creates 12 random characters, stores the hash, shows the clear text once, ends the user's sessions and clears their lockout. The user signs in with it and changes it from the sidebar. An administrator cannot reset their own account, and the owner `admin` is reset from `.env`. See ADR-0015 and the reset tests in `AuthServiceTest` and `AuthApiTest`.

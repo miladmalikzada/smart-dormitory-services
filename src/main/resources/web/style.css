@@ -44,6 +44,7 @@ code { background: var(--brand-soft); padding: 1px 6px; border-radius: 6px; font
 .tab:hover { background: rgba(255, 255, 255, .6); border: 0; }
 .tab.active { background: #fff; color: var(--brand-dark); box-shadow: 0 1px 3px rgba(20, 26, 60, .15); }
 .hint { font-size: 12.5px; color: var(--muted); }
+.temp-password { display: inline-block; padding: 10px 16px; border-radius: 8px; background: #eef2ff; font-size: 20px; letter-spacing: 2px; user-select: all; }
 .form-error { color: var(--bad); min-height: 20px; font-size: 13px; }
 .form-ok { color: #0b7a53; min-height: 20px; font-size: 13px; }
 .logo { width: 38px; height: 38px; border-radius: 11px; background: var(--brand-grad); display: grid; place-items: center; box-shadow: 0 4px 12px rgba(79, 70, 229, .45); flex: none; }

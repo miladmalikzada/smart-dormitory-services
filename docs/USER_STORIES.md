@@ -20,6 +20,7 @@
 | US16 | As the administrator I add rooms and set how many beds each has | Only ADMIN can add, resize or delete a room; staff and students get 403 but can look at rooms |
 | US17 | As the administrator I want a new student to get a room straight away | With "give a room automatically" ticked, the student is placed in the room with most free beds; if the dormitory is full the student is still saved and I see a clear message |
 | US18 | As a signed-in user I change my own password | Needs the current password; the old password stops working; my other sessions are signed out |
+| US19 | As the administrator I give a user who forgot their password a temporary one | Only ADMIN can do it; the temporary password is shown once; the old password stops working and the user is signed out everywhere |
 
 ## Acceptance criteria
 
@@ -108,3 +109,9 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * After the change the old password is refused (401 at sign-in), and the user's other sessions are signed out while the current one stays open.
 * A wrong current password gets 403 and changes nothing; five wrong tries in a minute lock the username (429), the same as at sign-in.
 * A new password that is shorter than 8 characters, or the same as the old one, gets 400.
+
+### US19 - Reset a forgotten password
+* When an administrator resets an account, the answer is 200 and contains a 12-character temporary password once; the user signs in with it and the old password gets 401.
+* The user's open sessions end at once (401 on their next request), and a lockout caused by wrong guesses is cleared.
+* A staff or student account that tries to reset gets 403; an administrator who names their own account gets 400; an unknown account gets 404.
+* The account list and every later answer never contain the temporary password.

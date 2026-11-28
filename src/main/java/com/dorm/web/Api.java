@@ -137,6 +137,7 @@ public class Api {
         return switch (p[3]) {
             case "approve" -> ok(accountJson(auth.approve(who.username(), p[2])));
             case "reject" -> ok(accountJson(auth.reject(who.username(), p[2])));
+            case "reset-password" -> ok(Map.of("username", p[2].trim().toLowerCase(), "temporaryPassword", auth.resetPassword(who.username(), p[2])));
             default -> error(404, "Unknown endpoint /" + clean);
         };
     }

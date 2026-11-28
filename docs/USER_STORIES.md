@@ -50,3 +50,7 @@ Each criterion names who acts, what they do and the result you can check (a stat
 ### US6 - Students must not change tickets
 * When a student tries to assign, start, resolve or delete a ticket, the answer is 403 and the ticket is unchanged.
 * A student can still create a ticket (US4) and read tickets.
+
+### US7 - Record a visitor arriving
+* When the host student exists, the arrival is recorded and the visitor is listed as inside.
+* When the host id does not exist, the answer is 404 and no visit is recorded.

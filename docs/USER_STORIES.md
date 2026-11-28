@@ -28,3 +28,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * When an administrator sends first name, last name, date of birth 2004-05-17 and IIN 040517501237, the answer is 201 and the student appears in the student list.
 * When the IIN has a wrong check digit, or its date does not match the date of birth, the answer is 400 and nothing is saved.
 * When a second student is sent with an IIN that is already stored, the answer is 409.
+
+### US2 - Request a room
+* When a room has a free bed and a student requests a room, the student id appears in that room's occupants.
+* When every bed in every room is taken, the request fails with an error and no room changes.
+* When a student who already has a room asks again, the request fails and the student keeps the first room.

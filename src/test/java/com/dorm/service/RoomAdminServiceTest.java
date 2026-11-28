@@ -44,4 +44,12 @@ class RoomAdminServiceTest {
         assertThrows(IllegalStateException.class, () -> admin.updateCapacity("R301", 1));
         assertEquals(2, admin.updateCapacity("R301", 2).capacity());   // exactly the residents is fine
     }
+
+    @Test void resizingKeepsTheResidents() {
+        Room room = admin.create("R301", 2);
+        room.assign("S1");
+        Room bigger = admin.updateCapacity("R301", 5);
+        assertEquals(List.of("S1"), bigger.occupants());
+        assertEquals(4, bigger.freeBeds());
+    }
 }

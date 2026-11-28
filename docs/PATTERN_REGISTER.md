@@ -11,7 +11,7 @@
 | 7 | Command (Behavioral) | L5 | Room assignment must be undoable | `Command`, `CommandHistory`, `AssignRoomCommand` / `RoomUndoTest` | Reverse-engineer undo with ad-hoc code in the service |
 | 8 | Memento (Behavioral) | L13 | Undo must restore the room *exactly* without exposing its internals | `Room.Memento`, `Room.save/restore` / `RoomUndoTest` | Copy the whole `Room`: breaks encapsulation and identity |
 | 9 | State (Behavioral) | L8 | Ticket status was a string checked in several places | `TicketState`, `TicketStates.*` / `TicketStateTest` | Status enum + switch: no behaviour per state |
-| 10 | Strategy (Behavioral) | L8 | Room-choice rule will change (fill first / spread out) | `RoomAllocationStrategy`, `FirstAvailableStrategy`, `LeastOccupiedStrategy`; also `CertificateFormat` with Text/Html/Csv formats / `AllocationStrategyTest`, `CertificateServiceTest` | Enum + switch in `RoomService` |
+| 10 | Strategy (Behavioral) | L8 | Room-choice rule will change (fill first / spread out) | `RoomAllocationStrategy`, `FirstAvailableStrategy`, `LeastOccupiedStrategy`, `FloorStrategy`; also `CertificateFormat` with Text/Html/Csv formats / `AllocationStrategyTest`, `FloorStrategyTest`, `CertificateServiceTest` | Enum + switch in `RoomService` |
 | 11 | Iterator (Behavioral) | L6 | "Who is still inside?" without exposing the list or repeating filter loops | `VisitorLog`, inner `InsideIterator` / `VisitorLogIteratorTest` | `stream().filter` in each caller |
 | 12 | Template Method (Behavioral) | L6 | Five SQL repositories repeat the same find/list/delete flow | `SqlRepository`, `SqliteRepositories.*` / `SqliteRepositoryTest` | Copy the JDBC code five times |
 

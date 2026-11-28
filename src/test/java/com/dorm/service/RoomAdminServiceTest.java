@@ -36,4 +36,12 @@ class RoomAdminServiceTest {
         assertThrows(IllegalArgumentException.class, () -> admin.create("R301", 0));
         assertEquals("R302", admin.create("  R302 ", 2).id());
     }
+
+    @Test void capacityCannotBeSmallerThanTheNumberOfResidents() {
+        Room room = admin.create("R301", 3);
+        room.assign("S1");
+        room.assign("S2");
+        assertThrows(IllegalStateException.class, () -> admin.updateCapacity("R301", 1));
+        assertEquals(2, admin.updateCapacity("R301", 2).capacity());   // exactly the residents is fine
+    }
 }

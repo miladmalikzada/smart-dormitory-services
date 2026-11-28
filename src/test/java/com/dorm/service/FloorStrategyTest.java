@@ -41,4 +41,11 @@ class FloorStrategyTest {
         List<Room> rooms = List.of(room("R103", 2, 0), room("R102", 2, 0));
         assertEquals("R102", new FloorStrategy().choose(rooms).orElseThrow().id());
     }
+
+    @Test void floorIsReadFromTheRoomId() {
+        assertEquals(1, FloorStrategy.floorOf("R101"));
+        assertEquals(2, FloorStrategy.floorOf("R204"));
+        assertEquals(0, FloorStrategy.floorOf("R12"));
+        assertEquals(0, FloorStrategy.floorOf("A"));
+    }
 }

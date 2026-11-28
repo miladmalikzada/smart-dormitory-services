@@ -157,4 +157,15 @@ class AuthServiceTest {
         assertNotNull(auth.login("admin", "brand-new-pass"));
         assertThrows(AuthenticationException.class, () -> auth.login("admin", "correct-horse"));
     }
+
+    @Test void wrongCurrentPasswordIsRefusedAndCountsTowardTheLockout() {
+        String token = auth.login("admin", "correct-horse").token();
+        for (int i = 0; i < AuthService.MAX_FAILURES; i++) {
+            assertThrows(AccessDeniedException.class, () -> auth.changePassword("admin", token, "nope", "brand-new-pass"));
+        }
+        assertThrows(RateLimitedException.class, () -> auth.changePassword("admin", token, "correct-horse", "brand-new-pass"));
+        clock.now = clock.now.plus(AuthService.LOCK_WINDOW).plus(Duration.ofSeconds(1));   // lock ends
+        assertThrows(AuthenticationException.class, () -> auth.login("admin", "brand-new-pass"));   // nothing was changed
+        assertNotNull(auth.login("admin", "correct-horse"));
+    }
 }

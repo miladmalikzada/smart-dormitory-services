@@ -9,6 +9,8 @@
 | Connected database | SQLite: `schema.sql`, `infra/SqliteRepositories.java` | `python3 scripts/show-db.py` while the site is running |
 | CRUD operations | Students, rooms, tickets, visitors, announcements | Create, edit, delete in the website; `ApiTest` proves each one |
 | Security (`.env`, login, encryption) | `.env.example`, `scripts/setup_env.py`, `AuthService`, `AesGcmCipher`, `docs/SECURITY.md` | Sign in as admin / staff / student: the same student shows full, masked or hidden identity numbers; `show-db.py` shows the encrypted columns |
+| Accounts: sign-up, approval, change password | `service/AuthService`, `infra/SqliteAccountStore`, ADR-0013, UML 13 and 15 | Sign up as a student (works at once), sign up as staff (waits), approve it as admin on the Accounts page, change a password from the sidebar |
+| Room administration and automatic room | `service/SecuredRoomAdminService`, `RoomAdminService`, ADR-0014, UML 14 | As admin add a room with its beds; add a student with "give a room automatically" ticked; as staff try to add a room and get 403 |
 | Student details (IIN, date of birth, passport, national ID...) | `domain/Student`, `domain/Iin`, `StudentService` | Add a student in the website; try a wrong IIN and see the error |
 | Documents and export | `service/CertificateService`, `CertificateFormat` (Strategy), `StudentExporter` | Students page: **Certificate** button per housed student, **Export CSV** in the toolbar |
 | Live demo | `docs/DB_DEMO.md`, `docs/DEFENCE_PREP.md` | 10-minute order below |

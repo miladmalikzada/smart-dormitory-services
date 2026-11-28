@@ -20,4 +20,9 @@ class FloorStrategyTest {
     @Test void fullDormitoryGivesNoRoom() {
         assertTrue(new FloorStrategy().choose(List.of(room("R101", 1, 1), room("R201", 2, 2))).isEmpty());
     }
+
+    @Test void lowestFloorIsFilledFirst() {
+        List<Room> rooms = List.of(room("R201", 3, 0), room("R101", 3, 1));
+        assertEquals("R101", new FloorStrategy().choose(rooms).orElseThrow().id());
+    }
 }

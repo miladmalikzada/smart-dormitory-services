@@ -9,7 +9,7 @@
 | Request | Where it goes |
 |---|---|
 | "Add an e-mail channel" | `EmailChannelFactory` (+ adapter if a vendor API) in `infra`, one line in `App` |
-| "Allocate by floor / gender / year of study" | new `RoomAllocationStrategy` class, one line in `App` |
+| "Allocate by floor / gender / year of study" | new `RoomAllocationStrategy` class, one line in `App` (floor is already done: `FloorStrategy`, see `FloorStrategyTest`) |
 | "Add a CLOSED state after RESOLVED" | new state class, change `Resolved.close()` only (State: only the neighbouring state changes) |
 | "Log every command" | new `DormEventListener` or a `Command` decorator |
 | "Visitors must leave by 22:00 - report overdue" | new method on `VisitorLog`/iterator `OverdueIterator` |

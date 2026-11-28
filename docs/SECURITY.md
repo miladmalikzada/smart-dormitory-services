@@ -9,6 +9,7 @@
 | Sessions | Random 256-bit Bearer token, expires after 8 hours, destroyed on logout. | `service/AuthService`, `web/Api.handleRequest` |
 | Accounts and sign-up | Anyone can sign up as a **student** (active at once). **Staff** and **admin** requests are `PENDING` and cannot sign in until the administrator approves them on the Accounts page. Only the `admin` account from `.env` exists at the start; it is reset at every start, so the owner cannot be locked out. An administrator cannot change their own account. Switching an account off ends its open sessions at once. Wrong passwords never reveal whether an account is pending. Sign-ups are limited to 20 per minute and 50 waiting requests. | `service/AuthService`, `infra/SqliteAccountStore`, table `accounts` |
 | Changing a password | A signed-in user must give the current password. Wrong tries count toward the same lockout as login. The new password gets a new random salt and hash, and every other session of that user ends. The owner account `admin` is reset from `.env` at each start, so its password is changed in `.env`. | `service/AuthService.changePassword` |
+| Resetting a password | Only an administrator can do it, never for their own account. The server makes a random 12-character password (no look-alike characters), stores only its salted hash, shows it once and ends the user's sessions and lockout. The temporary password is not logged and never appears in the account list. | `service/AuthService.resetPassword` |
 | Brute force | 5 wrong passwords in 60 seconds lock that user name for a minute (HTTP 429). Same message for unknown user and wrong password. | `service/AuthService` |
 | Roles | ADMIN: everything, and the only role that may add, resize or delete rooms. STAFF: students read-only with identity numbers masked (`********1237`); tickets. STUDENT: student directory only. Implemented as a **Protection Proxy**, so the real service has no role code. | `service/SecuredStudentService`, `SecuredTicketService`, `SecuredRoomAdminService` |
 | Input validation | IIN check digit and birth-date match, document formats, email, course year, duplicates, 64 KB request limit. | `domain/Iin`, `service/StudentService`, `web/WebServer` |
@@ -22,7 +23,7 @@
 4. Use only synthetic IIN/passport numbers in demos and screenshots.
 
 ## Honest limits (good to say in the defence)
-* No password reset (a forgotten password cannot be recovered) and no e-mail check at sign-up (see [LIMITATIONS.md](LIMITATIONS.md)).
+* No e-mail check at sign-up and no forced change of the temporary password (see [LIMITATIONS.md](LIMITATIONS.md)).
 * Plain HTTP on localhost. For a real deployment put it behind HTTPS (the token would otherwise be readable on the network).
 * Date of birth, phone, e-mail and address are not encrypted (they stay searchable); only the three government identity numbers are.
 * The key sits in an environment file, not a key vault. Production would use a secrets manager.

@@ -457,3 +457,33 @@ classDiagram
   Api --> AuthService : sign-up, sign-in, account routes
 ```
 The service layer only knows the `AccountStore` interface. SQLite (in `infra`) or memory plugs in from `App`, so `ArchitectureTest` keeps `service` free of `infra`.
+
+## 14. Sequence diagram: add a student with an automatic room (Proxy + Strategy + Command + Memento)
+```mermaid
+sequenceDiagram
+  actor A as Administrator
+  participant W as Website
+  participant API as Api
+  participant SS as SecuredStudentService
+  participant S as StudentService
+  participant RS as RoomService
+  participant ST as LeastOccupiedStrategy
+  participant CH as CommandHistory
+  participant CMD as AssignRoomCommand
+  participant R as Room
+  A->>W: fill in the form and tick "give a room automatically"
+  W->>API: POST /api/students (assignRoom = true)
+  API->>SS: register(data)
+  SS->>S: register(data), allowed for the administrator
+  S-->>API: student saved
+  API->>RS: requestRoom(studentId)
+  RS->>ST: choose(rooms)
+  ST-->>RS: the room with the most free beds
+  RS->>CH: execute(command)
+  CH->>CMD: execute()
+  CMD->>R: save() as Memento, then assign(studentId)
+  RS-->>API: room
+  API-->>W: 201 with the student and roomId
+  W-->>A: Student added and placed in room R201
+  Note over API,RS: If no bed is free, requestRoom throws IllegalStateException. The student stays saved and the answer carries roomMessage instead of roomId.
+```

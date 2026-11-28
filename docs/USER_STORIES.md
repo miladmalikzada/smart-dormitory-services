@@ -102,3 +102,9 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * When "give a room automatically" is ticked, the saved student is placed in the room with the most free beds and the answer names that room.
 * When the dormitory is full, the student is still saved and the answer carries a clear message that no room was free.
 * When the box is not ticked, the student is saved without a room.
+
+### US18 - Change my own password
+* When a signed-in user sends the right current password and a new password of 8 or more characters, the answer is 200 and the new password works at the next sign-in.
+* After the change the old password is refused (401 at sign-in), and the user's other sessions are signed out while the current one stays open.
+* A wrong current password gets 403 and changes nothing; five wrong tries in a minute lock the username (429), the same as at sign-in.
+* A new password that is shorter than 8 characters, or the same as the old one, gets 400.

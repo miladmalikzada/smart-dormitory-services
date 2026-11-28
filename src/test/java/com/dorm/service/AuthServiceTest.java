@@ -150,4 +150,11 @@ class AuthServiceTest {
         auth.addAccount("owner2", "fresh-secret-1", Role.ADMIN);   // what App does for the .env admin at every start
         assertEquals(Role.ADMIN, auth.login("owner2", "fresh-secret-1").role());
     }
+
+    @Test void changedPasswordWorksAndTheOldOneStops() {
+        String token = auth.login("admin", "correct-horse").token();
+        auth.changePassword("admin", token, "correct-horse", "brand-new-pass");
+        assertNotNull(auth.login("admin", "brand-new-pass"));
+        assertThrows(AuthenticationException.class, () -> auth.login("admin", "correct-horse"));
+    }
 }

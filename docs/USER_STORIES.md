@@ -19,6 +19,7 @@
 | US15 | As the administrator I decide who becomes staff or admin | Staff/admin sign-ups stay PENDING and cannot sign in until I approve them; a declined account is refused; nobody can approve themselves |
 | US16 | As the administrator I add rooms and set how many beds each has | Only ADMIN can add, resize or delete a room; staff and students get 403 but can look at rooms |
 | US17 | As the administrator I want a new student to get a room straight away | With "give a room automatically" ticked, the student is placed in the room with most free beds; if the dormitory is full the student is still saved and I see a clear message |
+| US18 | As a signed-in user I change my own password | Needs the current password; the old password stops working; my other sessions are signed out |
 
 ## Acceptance criteria
 

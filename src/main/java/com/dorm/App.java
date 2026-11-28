@@ -14,9 +14,12 @@ import com.dorm.infra.EnvConfig;
 import com.dorm.infra.FileRepository;
 import com.dorm.infra.InMemoryRepository;
 import com.dorm.infra.SmsChannelFactory;
+import com.dorm.infra.SqliteAccountStore;
 import com.dorm.infra.SqliteDatabase;
 import com.dorm.infra.SqliteRepositories;
+import com.dorm.service.AccountStore;
 import com.dorm.service.AnnouncementService;
+import com.dorm.service.MemoryAccountStore;
 import com.dorm.service.AuditLogListener;
 import com.dorm.service.CertificateOperations;
 import com.dorm.service.CertificateService;
@@ -32,7 +35,9 @@ import com.dorm.service.EventPublisher;
 import com.dorm.service.LeastOccupiedStrategy;
 import com.dorm.service.NotificationChannel;
 import com.dorm.service.NotificationListener;
+import com.dorm.service.RoomAdminOperations;
 import com.dorm.service.RoomAdminService;
+import com.dorm.service.SecuredRoomAdminService;
 import com.dorm.service.RoomService;
 import com.dorm.service.SecuredTicketService;
 import com.dorm.service.SessionContext;
@@ -64,7 +69,7 @@ public final class App {
     private App() { }
 
     /** Everything the user interfaces need, wired once. */
-    public record Services(RoomService rooms, StudentOperations students, RoomAdminService roomAdmin,
+    public record Services(RoomService rooms, StudentOperations students, RoomAdminOperations roomAdmin,
                            TicketOperations tickets, VisitorService visitors, AnnouncementService announcements,
                            SessionContext session, AuditLogListener audit, Api api) { }
 
@@ -99,8 +104,6 @@ public final class App {
     /** The website needs the three login passwords from .env; it refuses to start without them. */
     public static WebServer buildWeb(String storage, Path dataDir, int port, PrintStream out, EnvConfig cfg) throws IOException {
         cfg.require("DORM_ADMIN_PASSWORD");
-        cfg.require("DORM_STAFF_PASSWORD");
-        cfg.require("DORM_STUDENT_PASSWORD");
         return new WebServer(wire(storage, dataDir, out, cfg).api(), port);
     }
 
@@ -112,6 +115,7 @@ public final class App {
         Repository<MaintenanceTicket> ticketRepo;
         Repository<VisitorEntry> visitorRepo;
         Repository<Announcement> announcementRepo;
+        AccountStore accountStore;
         if ("sqlite".equals(storage)) {
             Connection db = SqliteDatabase.open(dataDir.resolve("dorm.db"));
             studentRepo = new SqliteRepositories.Students(db, AesGcmCipher.fromBase64(cfg.require("DORM_ENCRYPTION_KEY")));
@@ -119,12 +123,14 @@ public final class App {
             ticketRepo = new SqliteRepositories.Tickets(db);
             visitorRepo = new SqliteRepositories.Visitors(db);
             announcementRepo = new SqliteRepositories.Announcements(db);
+            accountStore = new SqliteAccountStore(db);
         } else {
             studentRepo = repo(storage, dataDir, "students");
             roomRepo = repo(storage, dataDir, "rooms");
             ticketRepo = repo(storage, dataDir, "tickets");
             visitorRepo = repo(storage, dataDir, "visitors");
             announcementRepo = repo(storage, dataDir, "announcements");
+            accountStore = new MemoryAccountStore();   // accounts survive restarts only with --storage=sqlite
         }
 
         // Notification channels: add a new channel = new ChannelFactory subclass + one line here.
@@ -145,11 +151,11 @@ public final class App {
         // Certificate formats: add a new format = new CertificateFormat class + one line here.
         CertificateOperations certificates = new SecuredCertificateService(new CertificateService(studentRepo, roomRepo,
                 List.of(new TextCertificateFormat(), new HtmlCertificateFormat(), new CsvCertificateFormat()), clock), session);
-        AuthService auth = new AuthService(clock);
-        addAccount(auth, cfg, "admin", "DORM_ADMIN_PASSWORD", Role.ADMIN);
-        addAccount(auth, cfg, "staff", "DORM_STAFF_PASSWORD", Role.STAFF);
-        addAccount(auth, cfg, "student", "DORM_STUDENT_PASSWORD", Role.STUDENT);
-        RoomAdminService roomAdmin = new RoomAdminService(roomRepo, ticketRepo);
+        AuthService auth = new AuthService(clock, accountStore);
+        // The owner's account always comes from .env, so nobody can lock the owner out.
+        String adminPassword = cfg.get("DORM_ADMIN_PASSWORD");
+        if (adminPassword != null) auth.addAccount("admin", adminPassword, Role.ADMIN);
+        RoomAdminOperations roomAdmin = new SecuredRoomAdminService(new RoomAdminService(roomRepo, ticketRepo), session);
         TicketOperations tickets = new SecuredTicketService(new TicketService(ticketRepo, roomRepo, events), session);
         VisitorService visitors = new VisitorService(visitorRepo, studentRepo, events, clock);
         AnnouncementService announcements = new AnnouncementService(announcementRepo, events, clock);
@@ -161,11 +167,6 @@ public final class App {
         }
         Api api = new Api(auth, certificates, studentService, roomAdmin, roomService, tickets, visitors, announcements, session, audit);
         return new Services(roomService, studentService, roomAdmin, tickets, visitors, announcements, session, audit, api);
-    }
-
-    private static void addAccount(AuthService auth, EnvConfig cfg, String user, String key, Role role) {
-        String password = cfg.get(key);
-        if (password != null) auth.addAccount(user, password, role);
     }
 
     private static <T extends Entity & Serializable> Repository<T> repo(String storage, Path dir, String name) {

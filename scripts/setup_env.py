@@ -18,12 +18,11 @@ def password():
 lines = [
     "# Private settings for Smart Dormitory Services. Do NOT commit this file.",
     f"DORM_ADMIN_PASSWORD={password()}",
-    f"DORM_STAFF_PASSWORD={password()}",
-    f"DORM_STUDENT_PASSWORD={password()}",
     f"DORM_ENCRYPTION_KEY={base64.b64encode(secrets.token_bytes(32)).decode()}",
     "",
 ]
 path.write_text("\n".join(lines))
 os.chmod(path, 0o600)
 print(f"Created {path}")
-print("Open it to see the passwords for the users: admin, staff, student.")
+print("Open it to see the administrator password (user name: admin).")
+print("Everyone else creates their own account on the sign-up page.")

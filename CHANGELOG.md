@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.1 - rooms and automatic room for new students
+- Fix: the *Add room* form on the Rooms page did nothing (an input called `id` hid the form's own id). Admins can add rooms and set their number of beds again.
+- Security: adding, resizing and deleting rooms is now ADMIN only (new `SecuredRoomAdminService`); before, any role could call the API. Staff and students see rooms read-only.
+- New students can be given a room automatically (tick box in the Add student form, `assignRoom` in the API); a full dormitory gives a clear message and the student is still saved.
+
+## 1.3.0 - professional design
+- New design system: dark gradient sidebar, card layout, colour-coded dashboard statistics, refined tables, buttons, badges and forms.
+- Sign-in page with an illustrated campus scene; welcome banner on the dashboard; a small picture and subtitle on every page; friendly empty states.
+- Original SVG illustrations in `src/main/resources/web/img/` (no third-party images, so no licence issues).
+- Mobile layout fixed: scrolling menu, no sideways overflow. The server can now also serve PNG, JPEG and WebP pictures.
+
+## 1.2.0 - sign-up and account approval
+- Sign-up page: username, password and account type (student, staff, administrator). Accounts and password hashes are stored in the SQLite `accounts` table.
+- Students are active at once; staff and administrator requests wait for approval by the owner administrator (new *Accounts* page, API `/api/signup` and `/api/accounts`).
+- Only the `admin` account from `.env` exists at the start. `DORM_STAFF_PASSWORD` and `DORM_STUDENT_PASSWORD` are no longer used.
+
 ## 1.1.0 - security, student records, certificates
 - Login with expiring Bearer tokens; accounts and the encryption key come from the private `.env` file.
 - Student records: IIN (validated), date of birth, national ID, passport, contacts, study and emergency data.

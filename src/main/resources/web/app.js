@@ -23,6 +23,7 @@ const ICONS = {
   wrench: '<path d="M14.5 6.5a4 4 0 0 0 5 5l-9.2 9.2a2.1 2.1 0 0 1-3-3z"/><path d="M14.5 6.5l3-3a4 4 0 0 0-3 3z"/>',
   door: '<path d="M6 21V4h9v17M3 21h18"/><circle cx="12" cy="13" r=".8"/><path d="M15 6l4 1v14"/>',
   bell: '<path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4z"/><path d="M10 21a2 2 0 0 0 4 0"/>',
+  key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'
 };
 const icon = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
@@ -75,13 +76,34 @@ const person = s => `<div class="cell-person"><span class="avatar">${esc(initial
 const locked = msg => `<div class="locked">${icon('lock').replace('<svg', '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"')} ${msg}</div>`;
 
 /* ---------- pages ---------- */
-const TITLES = { dashboard: 'Dashboard', students: 'Students', rooms: 'Rooms', tickets: 'Repairs', visitors: 'Visitors', announcements: 'Announcements' };
+const TITLES = { dashboard: 'Dashboard', students: 'Students', rooms: 'Rooms', tickets: 'Repairs', visitors: 'Visitors', announcements: 'Announcements', accounts: 'Accounts' };
+const SUBTITLES = {
+  dashboard: 'A quick look at the whole dormitory.',
+  students: 'Records, rooms and certificates for every resident.',
+  rooms: 'Beds, occupants and free space.',
+  tickets: 'Report a problem and follow it until it is fixed.',
+  visitors: 'Who is inside the building right now.',
+  announcements: 'News for all residents, sent to every channel.',
+  accounts: 'Approve staff and administrator requests.'
+};
+const ART = { dashboard: 'dashboard', students: 'students', rooms: 'rooms', tickets: 'repairs', visitors: 'visitors', announcements: 'announcements', accounts: 'accounts' };
+const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
+const ROLE_NOTE = {
+  ADMIN: 'You have full access: students, rooms, repairs and accounts.',
+  STAFF: 'You can handle repairs, visitors and look up students (identity numbers are masked).',
+  STUDENT: 'You can see the student directory, request a room and report problems.'
+};
 
 const views = {
   async dashboard() {
     const [s, events] = await Promise.all([api('GET', '/summary'), api('GET', '/events')]);
-    const stat = (n, label, ic) => `<div class="stat"><span class="ico">${icon(ic)}</span><b>${s[n]}</b><span>${label}</span></div>`;
-    return `<div class="cards">${stat('students', 'Students', 'users')}${stat('rooms', 'Rooms', 'bed')}${stat('freeBeds', 'Free beds', 'bed')}
+    let n = 0;
+    const stat = (key, label, ic) => `<div class="stat c${++n}"><span class="ico">${icon(ic)}</span><b>${s[key]}</b><span>${label}</span></div>`;
+    const quick = isAdmin() ? btn('+ Add student', 'add-student', '', '', 'light') + btn('Review accounts', 'goto', 'accounts', '', 'ghost-light')
+      : btn('Report a repair', 'goto', 'tickets', '', 'light') + btn('See students', 'goto', 'students', '', 'ghost-light');
+    return `<section class="hero"><div><span class="eyebrow">${greeting()}</span><h2>Welcome, ${esc(me.username)}</h2>
+        <p>${ROLE_NOTE[me.role] || ''}</p><div class="row-actions left">${quick}</div></div></section>
+      <div class="cards">${stat('students', 'Students', 'users')}${stat('rooms', 'Rooms', 'bed')}${stat('freeBeds', 'Free beds', 'bed')}
       ${stat('openTickets', 'Open repairs', 'wrench')}${stat('visitorsInside', 'Visitors inside', 'door')}${stat('announcements', 'Announcements', 'bell')}</div>
       <div class="card"><h3>Recent activity</h3>${events.length
         ? `<div class="activity">${events.map(e => `<div><span class="tag">${esc(e.type.replace(/_/g, ' '))}</span><span>${esc(e.message)}</span></div>`).join('')}</div>`
@@ -124,12 +146,15 @@ const views = {
     const rows = rooms.map(r => `<tr><td><b>${esc(r.id)}</b></td>
       <td><div class="bar"><i class="${fill(r)}"></i></div><small class="muted">${r.capacity - r.freeBeds} / ${r.capacity} beds used</small></td>
       <td>${r.occupants.map(o => `<span class="chip">${esc(name(o))}<button type="button" data-action="checkout" data-id="${esc(o)}" data-room="${esc(r.id)}" title="Check out">&times;</button></span>`).join('') || '<span class="muted">empty</span>'}</td>
-      <td><div class="row-actions">${btn('Capacity', 'edit-room', r.id, `data-cap="${r.capacity}"`)}${btn('Delete', 'delete-room', r.id, '', 'danger')}</div></td></tr>`);
-    return `<div class="card"><h3>Add a room</h3><form class="inline-form" id="f-room">
+      <td><div class="row-actions">${isAdmin() ? btn('Capacity', 'edit-room', r.id, `data-cap="${r.capacity}"`) + btn('Delete', 'delete-room', r.id, '', 'danger') : ''}</div></td></tr>`);
+    const addRoom = isAdmin() ? `<div class="card"><h3>Add a room</h3><form class="inline-form" id="f-room">
         <label>Room number<input name="id" required placeholder="R301"></label>
-        <label>Capacity<input name="capacity" type="number" min="1" value="2" required></label>
+        <label>Number of beds (capacity)<input name="capacity" type="number" min="1" max="20" value="2" required></label>
         <button class="primary">Add room</button>
-        <button type="button" data-action="undo">Undo last room action</button></form></div>
+        <button type="button" data-action="undo">Undo last room action</button></form>
+        <p class="hint">You can change the number of beds later with the Capacity button on a room.</p></div>`
+      : locked('Only an administrator can add rooms or change how many beds a room has.');
+    return `${addRoom}
       <div class="card">${table(['Room', 'Occupancy', 'Residents', ''], rows)}</div>`;
   },
 
@@ -173,12 +198,33 @@ const views = {
         <div>${esc(a.body)}</div><p class="muted">${when(a.postedAt)} &middot; ${esc(a.id)}</p>
         <div class="row-actions">${btn('Edit', 'edit-ann', a.id, `data-title="${esc(a.title)}" data-body="${esc(a.body)}"`)}${btn('Delete', 'delete-ann', a.id, '', 'danger')}</div></div>`).join('')
         : '<div class="empty">No announcements yet.</div>'}</div>`;
+  },
+  async accounts() {
+    if (!isAdmin()) return locked('Only an administrator can manage accounts.');
+    const list = await api('GET', '/accounts');
+    updatePending(list);
+    const waiting = list.filter(a => a.status === 'PENDING');
+    const status = a => `<span class="badge ${a.status === 'ACTIVE' ? 'good' : a.status === 'PENDING' ? 'warn' : 'bad'}">${a.status === 'ACTIVE' ? 'Active' : a.status === 'PENDING' ? 'Waiting' : 'Declined'}</span>`;
+    const rows = list.map(a => `<tr><td><b>${esc(a.username)}</b></td><td><span class="role-pill">${esc(a.role)}</span></td><td>${status(a)}</td><td>${esc(when(a.createdAt))}</td>
+      <td><div class="row-actions">${a.status !== 'ACTIVE' ? btn('Approve', 'approve-account', a.username, '', 'primary') : ''}
+        ${a.status !== 'REJECTED' && a.username !== me.username ? btn(a.status === 'PENDING' ? 'Decline' : 'Switch off', 'reject-account', a.username, '', 'danger') : ''}</div></td></tr>`);
+    return `${waiting.length ? `<div class="locked">${waiting.length} request${waiting.length > 1 ? 's are' : ' is'} waiting for your approval.</div>` : ''}
+      <div class="card"><h3>Accounts</h3>${table(['Username', 'Type', 'Status', 'Created', ''], rows)}
+      <p class="hint">Students can sign up on their own. Staff and administrator accounts can sign in only after you approve them.</p></div>`;
   }
 };
+
+function updatePending(list) {
+  const n = list.filter(a => a.status === 'PENDING').length;
+  $('pending-count').textContent = n;
+  $('pending-count').hidden = n === 0;
+}
 
 async function show(name) {
   current = name;
   $('page-title').textContent = TITLES[name];
+  $('page-sub').textContent = SUBTITLES[name] || '';
+  $('page-art').src = 'img/' + (ART[name] || 'dashboard') + '.svg';
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.view === name));
   try { view.innerHTML = await views[name](); }
   catch (e) { if (me) view.innerHTML = '<div class="card">Could not load data: ' + esc(e.message) + '</div>'; }
@@ -212,6 +258,9 @@ function studentForm(s) {
       ${field('Faculty', 'faculty', s.faculty, 'placeholder="Information Systems"')}
       <label>Course year${sel('courseYear', s.courseYear == null ? '' : String(s.courseYear), [['', '-'], ...[1, 2, 3, 4, 5, 6].map(n => [String(n), 'Year ' + n])])}</label>
     </div></fieldset>
+    ${edit ? '' : `<fieldset><legend>Accommodation</legend>
+      <label class="check"><input type="checkbox" name="assignRoom" checked> Give this student a room automatically (the room with the most free beds)</label>
+    </fieldset>`}
     <fieldset><legend>Emergency contact</legend><div class="grid2">
       ${field('Contact name', 'emergencyName', s.emergencyName)}${field('Contact phone', 'emergencyPhone', s.emergencyPhone, 'type="tel"')}
     </div></fieldset></div>
@@ -250,6 +299,11 @@ const actions = {
      <div class="modal-foot"><button type="button" data-action="close-modal">Close</button></div>`),
   'get-certificate': async d => { try { download(await api('GET', `/certificates/${d.id}/${d.format}`)); toast('Certificate downloaded'); } catch (e) { toast(e.message, true); } },
   'close-modal': () => closeModal(),
+  'goto': d => show(d.id),
+  'approve-account': d => run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/approve'), 'Account approved'),
+  'reject-account': d => confirm('Decline or switch off ' + d.id + '? They will be signed out.') && run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/reject'), 'Account switched off'),
+  'show-signin': () => authTab('signin'),
+  'show-signup': () => authTab('signup'),
   'add-student': () => openModal('Add student', studentForm(null)),
   'edit-student': async d => { try { openModal('Edit student', studentForm(await api('GET', '/students/' + d.id))); } catch (e) { toast(e.message, true); } },
   'view-student': async d => {
@@ -300,19 +354,28 @@ const creators = {
 document.addEventListener('submit', async e => {
   e.preventDefault();
   const f = e.target;
-  if (f.id === 'f-student') {
+  // f.id would return the <input name="id"> of the room form, so read the attribute instead
+  const fid = f.getAttribute('id');
+  if (fid === 'f-student') {
     const data = form(f);
     if (data.courseYear === '') delete data.courseYear;
     try {
-      if (f.dataset.id) await api('PUT', '/students/' + f.dataset.id, data); else await api('POST', '/students', data);
+      let msg = 'Student updated';
+      if (f.dataset.id) await api('PUT', '/students/' + f.dataset.id, data);
+      else {
+        const r = await api('POST', '/students', data);
+        msg = r.roomId ? `Student added and placed in room ${r.roomId}` : r.roomMessage ? 'Student added. ' + r.roomMessage : 'Student added';
+      }
       closeModal();
-      toast(f.dataset.id ? 'Student updated' : 'Student added');
+      toast(msg);
       await show('students');
     } catch (err) { $('student-error').textContent = err.message; }
-  } else if (f.id === 'login-form') {
+  } else if (fid === 'login-form') {
     await login(f);
-  } else if (creators[f.id]) {
-    creators[f.id](f);
+  } else if (fid === 'signup-form') {
+    await signUp(f);
+  } else if (creators[fid]) {
+    creators[fid](f);
   }
 });
 
@@ -328,6 +391,9 @@ function showApp() {
   $('who-name').textContent = me.username;
   $('who-role').textContent = me.role;
   $('who-avatar').textContent = me.username[0].toUpperCase();
+  $('nav-accounts').hidden = !isAdmin();
+  if (isAdmin()) api('GET', '/accounts').then(updatePending).catch(() => {});
+  if (current === 'accounts' && !isAdmin()) current = 'dashboard';
   $('today').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   show(current);
 }
@@ -340,7 +406,46 @@ function signOutLocally() {
   $('modal-body').innerHTML = '';
   $('app').hidden = true;
   $('login-screen').hidden = false;
+  authTab('signin');
+}
+
+function authTab(which) {
+  const up = which === 'signup';
+  $('login-form').hidden = up;
+  $('signup-form').hidden = !up;
+  $('tab-signin').classList.toggle('active', !up);
+  $('tab-signup').classList.toggle('active', up);
   $('login-error').textContent = '';
+  $('signup-error').textContent = '';
+  $('signup-ok').textContent = '';
+}
+
+$('signup-role').addEventListener('change', e => {
+  $('signup-hint').textContent = e.target.value === 'STUDENT'
+    ? 'Student accounts are ready immediately.'
+    : 'Staff and administrator accounts must be approved by the administrator before you can sign in.';
+});
+
+async function signUp(f) {
+  $('signup-error').textContent = '';
+  $('signup-ok').textContent = '';
+  const data = form(f);
+  if (data.password !== data.confirm) { $('signup-error').textContent = 'The two passwords are not the same'; return; }
+  delete data.confirm;
+  $('signup-btn').disabled = true;
+  try {
+    const r = await api('POST', '/signup', data);
+    f.reset();
+    if (r.status === 'ACTIVE') {
+      authTab('signin');
+      $('login-user').value = r.username;
+      $('login-error').textContent = '';
+      toast(r.message);
+    } else {
+      $('signup-ok').textContent = r.message;
+    }
+  } catch (err) { $('signup-error').textContent = err.message; }
+  $('signup-btn').disabled = false;
 }
 
 async function login(f) {

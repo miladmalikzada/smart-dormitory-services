@@ -1,5 +1,6 @@
 package com.dorm.web;
 
+import com.dorm.domain.AccountStatus;
 import com.dorm.domain.Announcement;
 import com.dorm.domain.DormEvent;
 import com.dorm.domain.MaintenanceTicket;
@@ -9,6 +10,7 @@ import com.dorm.domain.Room;
 import com.dorm.domain.Student;
 import com.dorm.domain.VisitorEntry;
 import com.dorm.service.AccessDeniedException;
+import com.dorm.service.AccountView;
 import com.dorm.service.AnnouncementService;
 import com.dorm.service.AuditLogListener;
 import com.dorm.service.AuthService;
@@ -20,7 +22,7 @@ import com.dorm.service.RateLimitedException;
 import com.dorm.service.StudentData;
 import com.dorm.service.StudentOperations;
 import com.dorm.service.NotFoundException;
-import com.dorm.service.RoomAdminService;
+import com.dorm.service.RoomAdminOperations;
 import com.dorm.service.RoomService;
 import com.dorm.service.SessionContext;
 import com.dorm.service.TicketOperations;
@@ -30,6 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * REST API logic (no sockets here, so it can be unit-tested). It only calls services.
@@ -47,7 +50,7 @@ public class Api {
     private final StudentOperations students;
     private final AuthService auth;
     private final CertificateOperations certificates;
-    private final RoomAdminService roomAdmin;
+    private final RoomAdminOperations roomAdmin;
     private final RoomService rooms;
     private final TicketOperations tickets;
     private final VisitorService visitors;
@@ -55,7 +58,7 @@ public class Api {
     private final SessionContext session;
     private final AuditLogListener audit;
 
-    public Api(AuthService auth, CertificateOperations certificates, StudentOperations students, RoomAdminService roomAdmin, RoomService rooms, TicketOperations tickets,
+    public Api(AuthService auth, CertificateOperations certificates, StudentOperations students, RoomAdminOperations roomAdmin, RoomService rooms, TicketOperations tickets,
                VisitorService visitors, AnnouncementService announcements, SessionContext session, AuditLogListener audit) {
         this.auth = auth;
         this.certificates = certificates;
@@ -79,6 +82,16 @@ public class Api {
                 AuthService.Login l = auth.login(str(b, "username"), str(b, "password"));
                 return ok(loginJson(l));
             }
+            if (clean.equals("api/signup")) {
+                if (!method.equals("POST")) return notAllowed();
+                Map<String, Object> b = Json.parseObject(bodyText);
+                AccountView a = auth.signUp(str(b, "username"), str(b, "password"), accountType(b));
+                Map<String, Object> out = accountJson(a);
+                out.put("message", a.status() == AccountStatus.ACTIVE
+                        ? "Account created. You can sign in now."
+                        : "Request sent. You can sign in after the administrator approves it.");
+                return created(out);
+            }
             String token = authorization != null && authorization.regionMatches(true, 0, "Bearer ", 0, 7)
                     ? authorization.substring(7).trim() : null;
             AuthService.Login who = auth.authenticate(token)
@@ -92,14 +105,51 @@ public class Api {
                 me.remove("token");
                 return ok(me);
             }
+            if (clean.equals("api/accounts") || clean.startsWith("api/accounts/")) return accounts(method, clean, who);
             return handle(method, path, bodyText, who.role());
         } catch (AuthenticationException e) {
             return error(401, e.getMessage());
         } catch (RateLimitedException e) {
             return error(429, e.getMessage());
+        } catch (NotFoundException e) {
+            return error(404, e.getMessage());
         } catch (IllegalArgumentException e) {
             return error(400, e.getMessage());
+        } catch (IllegalStateException e) {
+            return error(409, e.getMessage());
         }
+    }
+
+    /** Administrator only: GET /api/accounts, POST /api/accounts/{username}/approve or /reject. */
+    private Response accounts(String method, String clean, AuthService.Login who) {
+        if (who.role() != Role.ADMIN) return error(403, "Only an administrator can manage accounts");
+        String[] p = clean.split("/");
+        if (p.length == 2) return method.equals("GET") ? ok(auth.listAccounts().stream().map(Api::accountJson).toList()) : notAllowed();
+        if (p.length != 4 || !method.equals("POST")) return method.equals("POST") ? error(404, "Unknown endpoint /" + clean) : notAllowed();
+        return switch (p[3]) {
+            case "approve" -> ok(accountJson(auth.approve(who.username(), p[2])));
+            case "reject" -> ok(accountJson(auth.reject(who.username(), p[2])));
+            default -> error(404, "Unknown endpoint /" + clean);
+        };
+    }
+
+    private static Role accountType(Map<String, Object> b) {
+        String type = str(b, "role");
+        if (type == null) return null;
+        try {
+            return Role.valueOf(type.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Choose an account type: student, staff or admin");
+        }
+    }
+
+    private static Map<String, Object> accountJson(AccountView a) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("username", a.username());
+        m.put("role", a.role().name());
+        m.put("status", a.status().name());
+        m.put("createdAt", a.createdAt().toString());
+        return m;
     }
 
     private static Map<String, Object> loginJson(AuthService.Login l) {
@@ -152,7 +202,7 @@ public class Api {
     private Response students(String m, String id, Map<String, Object> b) {
         return switch (m) {
             case "GET" -> ok(id == null ? students.list().stream().map(this::json).toList() : json(students.get(id)));
-            case "POST" -> created(json(students.register(studentData(b))));
+            case "POST" -> created(registerStudent(b));
             case "PUT" -> ok(json(students.update(need(id), studentData(b))));
             case "DELETE" -> { students.delete(need(id)); yield deleted(id); }
             default -> notAllowed();
@@ -160,6 +210,25 @@ public class Api {
     }
 
     /** GET /api/certificates/{studentId}/{text|html|csv} */
+    /** Registers a student; with "assignRoom" set, also places them in the room the allocation strategy picks. */
+    private Map<String, Object> registerStudent(Map<String, Object> b) {
+        Student s = students.register(studentData(b));
+        Map<String, Object> out = new LinkedHashMap<>(json(s));
+        if (flag(b, "assignRoom")) {
+            try {
+                out.put("roomId", rooms.requestRoom(s.id()).id());
+            } catch (IllegalStateException e) {
+                out.put("roomMessage", "No free room is available. Add a room or free a bed, then use Request room.");
+            }
+        }
+        return out;
+    }
+
+    private static boolean flag(Map<String, Object> b, String key) {
+        Object v = b.get(key);
+        return v instanceof Boolean x ? x : v != null && Set.of("true", "on", "yes").contains(String.valueOf(v).toLowerCase());
+    }
+
     private Response certificate(String m, String studentId, String format) {
         if (!m.equals("GET")) return notAllowed();
         return ok(document(certificates.issue(need(studentId), format == null ? "text" : format)));

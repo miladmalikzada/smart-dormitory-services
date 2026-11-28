@@ -115,4 +115,29 @@ class SqliteRepositoryTest {
                 null, null, "Law", null, null, null, null));
         assertNull(students.findById("S5").orElseThrow().courseYear());
     }
+
+    @Test void accountsSurviveReopeningTheDatabase() {
+        var store = new SqliteAccountStore(db);
+        var auth = new com.dorm.service.AuthService(java.time.Clock.systemUTC(), store);
+        auth.signUp("aida", "my-secret-1", com.dorm.domain.Role.STUDENT);
+        auth.signUp("maria", "my-secret-1", com.dorm.domain.Role.STAFF);
+        auth.approve("admin", "maria");
+
+        Connection again = SqliteDatabase.open(tmp.resolve("test.db"));   // "restart the server"
+        var auth2 = new com.dorm.service.AuthService(java.time.Clock.systemUTC(), new SqliteAccountStore(again));
+        assertEquals(com.dorm.domain.Role.STUDENT, auth2.login("aida", "my-secret-1").role());
+        assertEquals(com.dorm.domain.Role.STAFF, auth2.login("maria", "my-secret-1").role());
+        assertThrows(com.dorm.service.AuthenticationException.class, () -> auth2.login("aida", "wrong-password"));
+        assertEquals(2, auth2.listAccounts().size());
+    }
+
+    @Test void passwordsAreStoredOnlyAsHashes() throws Exception {
+        new com.dorm.service.AuthService(java.time.Clock.systemUTC(), new SqliteAccountStore(db))
+                .signUp("aida", "my-secret-1", com.dorm.domain.Role.STUDENT);
+        try (var st = db.createStatement(); var rs = st.executeQuery("SELECT salt, password_hash FROM accounts")) {
+            assertTrue(rs.next());
+            assertFalse(rs.getString("password_hash").contains("my-secret-1"));
+            assertFalse(rs.getString("salt").isBlank());
+        }
+    }
 }

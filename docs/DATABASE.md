@@ -95,4 +95,5 @@ Student records hold personal data, so three columns are protected:
 * Because the same number encrypts to different text each time, SQL `UNIQUE` cannot be used on these columns;
   `StudentService` checks uniqueness instead (tested in `ApiTest.duplicateIdentityNumbersAreRejected`).
 * Run `python3 scripts/show-db.py` to show the professor the encrypted columns next to the readable ones.
+* The `accounts` table (username, salt, password_hash, role, status, created_at) holds the login accounts. It has no link to `students`, because a student account is a login, not a record. Passwords are stored only as PBKDF2 hashes.
 * An older `data/dorm.db` (before this change) has a different `students` table: delete the `data/` folder once.

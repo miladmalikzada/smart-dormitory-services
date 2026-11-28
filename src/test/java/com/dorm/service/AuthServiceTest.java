@@ -194,4 +194,12 @@ class AuthServiceTest {
         assertEquals(AccountStatus.ACTIVE, auth.listAccounts().stream()
                 .filter(a -> a.username().equals("maria")).findFirst().orElseThrow().status());
     }
+
+    @Test void temporaryPasswordsAreLongRandomAndEasyToRead() {
+        String a = auth.generateTemporaryPassword();
+        String b = auth.generateTemporaryPassword();
+        assertEquals(AuthService.TEMPORARY_PASSWORD_LENGTH, a.length());
+        assertNotEquals(a, b);
+        assertTrue(a.matches("[a-zA-Z2-9]+") && !a.matches(".*[lIO].*"), a);
+    }
 }

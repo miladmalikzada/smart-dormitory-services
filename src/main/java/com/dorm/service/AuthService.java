@@ -35,6 +35,9 @@ public class AuthService {
     public static final Duration TOKEN_LIFETIME = Duration.ofHours(8);
     public static final int MAX_SIGNUPS_PER_MINUTE = 20;
     public static final int MAX_PENDING = 50;
+    public static final int TEMPORARY_PASSWORD_LENGTH = 12;
+    /** No 0/O and no 1/l/I, so a temporary password can be read out loud or copied by hand without mistakes. */
+    private static final String TEMPORARY_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final int ITERATIONS = 120_000;
     private static final Pattern USERNAME = Pattern.compile("[a-z0-9][a-z0-9._-]{2,31}");
 
@@ -202,6 +205,13 @@ public class AuthService {
         accounts.save(new AccountRecord(a.username(), salt, hash(newPassword, salt), a.role(), a.status(), a.createdAt()));
         recent.clear();
         sessions.entrySet().removeIf(e -> e.getValue().username().equals(user) && !e.getKey().equals(keepToken));
+    }
+
+    /** A random password for {@link #resetPassword}, made with the same SecureRandom as the salts. */
+    String generateTemporaryPassword() {
+        StringBuilder sb = new StringBuilder(TEMPORARY_PASSWORD_LENGTH);
+        for (int i = 0; i < TEMPORARY_PASSWORD_LENGTH; i++) sb.append(TEMPORARY_ALPHABET.charAt(random.nextInt(TEMPORARY_ALPHABET.length())));
+        return sb.toString();
     }
 
     public synchronized void logout(String token) { if (token != null) sessions.remove(token); }

@@ -30,4 +30,10 @@ class FloorStrategyTest {
         List<Room> rooms = List.of(room("R101", 1, 1), room("R102", 2, 2), room("R201", 3, 0));
         assertEquals("R201", new FloorStrategy().choose(rooms).orElseThrow().id());
     }
+
+    @Test void staysOnOneFloorUntilItIsFull() {
+        // LeastOccupiedStrategy would pick R102 or R201 here (more free beds); the floor rule keeps using R101.
+        List<Room> rooms = List.of(room("R101", 3, 2), room("R102", 3, 0), room("R201", 3, 0));
+        assertEquals("R101", new FloorStrategy().choose(rooms).orElseThrow().id());
+    }
 }

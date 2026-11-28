@@ -196,4 +196,47 @@ class AuthApiTest {
         assertEquals(401, changePassword("forged-token", "x", "long-enough-1").status());
         assertEquals(405, get("/api/me/password", account("aida", "STUDENT")).status());
     }
+
+    // ---- administrator password reset ----
+
+    private Api.Response reset(String token, String user) {
+        return api.handleRequest("POST", "/api/accounts/" + user + "/reset-password", null, token == null ? null : "Bearer " + token);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test void anAdministratorResetsAPasswordAndTheUserSignsInWithTheTemporaryOne() {
+        String student = account("aida", "STUDENT");
+        String admin = token("admin", "admin-pass-1");
+        Api.Response r = reset(admin, "aida");
+        assertEquals(200, r.status());
+        Map<String, Object> body = (Map<String, Object>) r.body();
+        assertEquals("aida", body.get("username"));
+        String temporary = (String) body.get("temporaryPassword");
+        assertEquals(401, get("/api/me", student).status());     // old session ended
+        assertEquals(401, api.handleRequest("POST", "/api/login", "{\"username\":\"aida\",\"password\":\"aida-pass-1\"}", null).status());
+        assertNotNull(token("aida", temporary));
+    }
+
+    @Test void onlyAnAdministratorMayReset() {
+        String staff = account("maria", "STAFF");
+        String student = account("aida", "STUDENT");
+        assertEquals(403, reset(staff, "aida").status());
+        assertEquals(403, reset(student, "maria").status());
+        assertEquals(401, reset(null, "aida").status());
+        assertNotNull(token("aida", "aida-pass-1"));   // nothing changed
+    }
+
+    @Test void resetGivesClearErrorsAndOnlyAcceptsPost() {
+        String admin = token("admin", "admin-pass-1");
+        assertEquals(404, reset(admin, "ghost").status());
+        assertEquals(400, reset(admin, "admin").status());      // use "change password" for yourself
+        assertEquals(405, get("/api/accounts/aida/reset-password", admin).status());
+    }
+
+    @Test void theAccountListNeverShowsTemporaryPasswords() {
+        account("aida", "STUDENT");
+        String admin = token("admin", "admin-pass-1");
+        reset(admin, "aida");
+        assertFalse(get("/api/accounts", admin).body().toString().toLowerCase().contains("temporary"));
+    }
 }

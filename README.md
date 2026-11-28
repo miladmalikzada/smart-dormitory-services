@@ -86,8 +86,23 @@ Dependencies point inward and are enforced by `ArchitectureTest` (ArchUnit).
 The website uses its own small design system in `src/main/resources/web/style.css` and original SVG illustrations in `src/main/resources/web/img/` (campus scene, dashboard banner, one picture per page). To use a real photo on the sign-in page, copy it to that folder (for example `login-photo.jpg`) and change the `url(img/hero-campus.svg)` line in the `.login-art` rule. Only use photos you own or that have a free licence.
 
 ## Patterns used (details: [docs/PATTERN_REGISTER.md](docs/PATTERN_REGISTER.md))
-Factory Method, Builder, Adapter, Decorator, Proxy, Observer, Command, Memento, State, Strategy, Iterator, Template Method
-(12 patterns; combinations: Command + Memento, Factory Method + Decorator). Rejected: Singleton, Visitor, Facade.
+
+| # | Pattern | Main classes | Tests |
+|---|---|---|---|
+| 1 | Factory Method | [`ChannelFactory`](src/main/java/com/dorm/service/ChannelFactory.java), [`ConsoleChannelFactory`](src/main/java/com/dorm/infra/ConsoleChannelFactory.java), [`SmsChannelFactory`](src/main/java/com/dorm/infra/SmsChannelFactory.java) | [`AdapterAndDecoratorTest`](src/test/java/com/dorm/infra/AdapterAndDecoratorTest.java), [`ExtensionPointTest`](src/test/java/com/dorm/service/ExtensionPointTest.java) |
+| 2 | Builder | [`MaintenanceTicket`](src/main/java/com/dorm/domain/MaintenanceTicket.java) | [`TicketBuilderTest`](src/test/java/com/dorm/domain/TicketBuilderTest.java) |
+| 3 | Adapter | [`SmsChannelAdapter`](src/main/java/com/dorm/infra/SmsChannelAdapter.java), [`LegacySmsGateway`](src/main/java/com/dorm/infra/LegacySmsGateway.java) | [`AdapterAndDecoratorTest`](src/test/java/com/dorm/infra/AdapterAndDecoratorTest.java) |
+| 4 | Decorator | [`TimestampedChannel`](src/main/java/com/dorm/service/TimestampedChannel.java) | [`AdapterAndDecoratorTest`](src/test/java/com/dorm/infra/AdapterAndDecoratorTest.java) |
+| 5 | Proxy | [`SecuredTicketService`](src/main/java/com/dorm/service/SecuredTicketService.java), [`SecuredStudentService`](src/main/java/com/dorm/service/SecuredStudentService.java), [`SessionContext`](src/main/java/com/dorm/service/SessionContext.java) | [`ProxyTest`](src/test/java/com/dorm/service/ProxyTest.java), [`StudentProxyTest`](src/test/java/com/dorm/service/StudentProxyTest.java) |
+| 6 | Observer | [`EventPublisher`](src/main/java/com/dorm/service/EventPublisher.java), [`NotificationListener`](src/main/java/com/dorm/service/NotificationListener.java), [`AuditLogListener`](src/main/java/com/dorm/service/AuditLogListener.java) | [`ObserverTest`](src/test/java/com/dorm/service/ObserverTest.java) |
+| 7 | Command | [`Command`](src/main/java/com/dorm/service/Command.java), [`CommandHistory`](src/main/java/com/dorm/service/CommandHistory.java), [`AssignRoomCommand`](src/main/java/com/dorm/service/AssignRoomCommand.java) | [`RoomUndoTest`](src/test/java/com/dorm/service/RoomUndoTest.java) |
+| 8 | Memento | [`Room`](src/main/java/com/dorm/domain/Room.java) | [`RoomUndoTest`](src/test/java/com/dorm/service/RoomUndoTest.java) |
+| 9 | State | [`TicketState`](src/main/java/com/dorm/domain/TicketState.java), [`TicketStates`](src/main/java/com/dorm/domain/TicketStates.java) | [`TicketStateTest`](src/test/java/com/dorm/domain/TicketStateTest.java) |
+| 10 | Strategy | [`RoomAllocationStrategy`](src/main/java/com/dorm/service/RoomAllocationStrategy.java), [`FirstAvailableStrategy`](src/main/java/com/dorm/service/FirstAvailableStrategy.java), [`LeastOccupiedStrategy`](src/main/java/com/dorm/service/LeastOccupiedStrategy.java) | [`AllocationStrategyTest`](src/test/java/com/dorm/service/AllocationStrategyTest.java) |
+| 11 | Iterator | [`VisitorLog`](src/main/java/com/dorm/domain/VisitorLog.java) | [`VisitorLogIteratorTest`](src/test/java/com/dorm/domain/VisitorLogIteratorTest.java) |
+| 12 | Template Method | [`SqlRepository`](src/main/java/com/dorm/infra/SqlRepository.java), [`SqliteRepositories`](src/main/java/com/dorm/infra/SqliteRepositories.java) | [`SqliteRepositoryTest`](src/test/java/com/dorm/infra/SqliteRepositoryTest.java) |
+
+12 patterns; combinations: Command + Memento, Factory Method + Decorator. Rejected: Singleton, Visitor, Facade.
 
 ## Extension points
 * **New notification channel** → one new `ChannelFactory` subclass (see `ExtensionPointTest`).

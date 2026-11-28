@@ -12,7 +12,7 @@ rm -rf data                       # start with a clean database (also required a
 
 ## Step 1 - Show the design (30 s)
 Open `src/main/resources/schema.sql` and `docs/DATABASE.md` (ER diagram).
-Say: "Six tables in third normal form, primary and foreign keys, CHECK rules, one view."
+Say: "Seven tables in third normal form, primary and foreign keys, CHECK rules, one view."
 
 ## Step 2 - Use the website, data goes into SQLite (2 min)
 The fastest way is the website: run `bash scripts/run-web.sh`, open http://localhost:8080, sign in as `admin`, add a student (with IIN, date of birth, passport number), request a room, report a problem, post an announcement, then continue with Step 3 in a second terminal while the site is still running. The console version below does the same.
@@ -55,6 +55,6 @@ python3 scripts/show-db.py data/dorm.db --sample                          # fill
 
 ## Questions to expect
 * **Why SQLite?** No server to install, real SQL and constraints, tests run offline.
-* **Why six tables?** Residents are rows in `room_occupants`, not a list inside `rooms`: no repeated data (3NF).
+* **Why seven tables?** Residents are rows in `room_occupants`, not a list inside `rooms`: no repeated data (3NF).
 * **How does Java reach the database?** Through the `Repository` interface; `SqlRepository` is a Template Method base class with five subclasses; only `infra` imports `java.sql`.
 * **What if we change to PostgreSQL?** New repository classes behind the same interface; the service layer is unchanged.

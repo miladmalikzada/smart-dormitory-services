@@ -225,4 +225,14 @@ class AuthServiceTest {
         auth.resetPassword("admin", "aida");
         assertTrue(auth.authenticate(token).isEmpty());
     }
+
+    @Test void resetAlsoEndsALockout() {
+        auth.signUp("aida", "aida-pass-1", Role.STUDENT);
+        for (int i = 0; i < AuthService.MAX_FAILURES; i++) {
+            assertThrows(AuthenticationException.class, () -> auth.login("aida", "guess"));
+        }
+        assertThrows(RateLimitedException.class, () -> auth.login("aida", "aida-pass-1"));
+        String temporary = auth.resetPassword("admin", "aida");
+        assertNotNull(auth.login("aida", temporary));
+    }
 }

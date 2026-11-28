@@ -220,6 +220,7 @@ public class AuthService {
         random.nextBytes(salt);
         accounts.save(new AccountRecord(a.username(), salt, hash(temporary, salt), a.role(), a.status(), a.createdAt()));
         sessions.values().removeIf(s -> s.username().equals(a.username()));
+        failures.remove(a.username());   // someone who was locked out by wrong guesses can sign in at once
         return temporary;
     }
 

@@ -40,4 +40,10 @@ class AuthLimitsTest {
         signUpMany("student", AuthService.MAX_SIGNUPS_PER_MINUTE, Role.STUDENT);
         assertThrows(RateLimitedException.class, () -> auth.signUp("onemore", "long-enough-1", Role.STUDENT));
     }
+
+    @Test void signUpsWorkAgainAfterTheMinute() {
+        signUpMany("student", AuthService.MAX_SIGNUPS_PER_MINUTE, Role.STUDENT);
+        minutePasses();
+        assertEquals("onemore", auth.signUp("onemore", "long-enough-1", Role.STUDENT).username());
+    }
 }

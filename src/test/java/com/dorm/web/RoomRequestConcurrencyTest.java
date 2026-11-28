@@ -119,4 +119,13 @@ class RoomRequestConcurrencyTest {
         assertEquals(BEDS, residents);
         assertEquals(BEDS, housed.size(), "nobody lives in two rooms");
     }
+
+    @Test void sixRequestsFromTheSameStudentGiveExactlyOneRoom() throws Exception {
+        String id = newStudent(validIins(1).get(0), "Ayan");
+        List<Integer> statuses = requestAtOnce(List.of(id, id, id, id, id, id));
+        assertEquals(1, statuses.stream().filter(s -> s == 201).count());
+        assertEquals(5, statuses.stream().filter(s -> s == 409).count());
+        long roomsWithAyan = rooms().stream().filter(r -> ((List<?>) r.get("occupants")).contains(id)).count();
+        assertEquals(1, roomsWithAyan);
+    }
 }

@@ -54,4 +54,11 @@ class AuthLimitsTest {
         assertThrows(RateLimitedException.class, () -> auth.signUp("adminextra", "long-enough-1", Role.ADMIN));
         assertEquals("student1", auth.signUp("student1", "long-enough-1", Role.STUDENT).username());
     }
+
+    @Test void decidingARequestFreesAPlaceInTheWaitingList() {
+        signUpMany("staff", AuthService.MAX_PENDING, Role.STAFF);
+        minutePasses();
+        auth.approve("admin", "staff0");
+        assertEquals("staffextra", auth.signUp("staffextra", "long-enough-1", Role.STAFF).username());
+    }
 }

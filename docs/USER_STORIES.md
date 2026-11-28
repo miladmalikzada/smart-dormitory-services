@@ -91,3 +91,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * A sign-up with role STAFF or ADMIN gets status PENDING and cannot sign in until the administrator approves it.
 * A rejected account stays unable to sign in.
 * Only the administrator can list, approve or reject accounts (others get 403), and nobody can reject their own account.
+
+### US16 - The administrator adds rooms and sets beds
+* When the administrator adds a room with a name and a number of beds, it appears in the room list with that capacity.
+* When staff or a student try to add, resize or delete a room, the answer is 403; they can still look at rooms.
+* A room cannot get a capacity below 1.

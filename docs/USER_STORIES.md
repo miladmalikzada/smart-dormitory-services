@@ -81,3 +81,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * A request without a valid token gets 401; so does a forged token or a non-Bearer header.
 * A wrong password gets 401 with a generic message that does not say whether the username exists.
 * After five wrong passwords for one username in a minute, the next attempt gets 429, even with the correct password.
+
+### US14 - Students create their own account
+* Signing up with role STUDENT and a password of at least 8 characters gives 201, status ACTIVE, and the student can sign in at once.
+* A username shorter than 3 characters, a short password, an unknown role or a name that is already taken is refused (400 or 409) and no account is created.
+* The database stores only a salt and a password hash; the password itself is never stored.

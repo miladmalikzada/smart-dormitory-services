@@ -16,4 +16,8 @@ class FloorStrategyTest {
     @Test void emptyListOfRoomsGivesNoRoom() {
         assertTrue(new FloorStrategy().choose(List.of()).isEmpty());
     }
+
+    @Test void fullDormitoryGivesNoRoom() {
+        assertTrue(new FloorStrategy().choose(List.of(room("R101", 1, 1), room("R201", 2, 2))).isEmpty());
+    }
 }

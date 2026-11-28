@@ -487,3 +487,15 @@ sequenceDiagram
   W-->>A: Student added and placed in room R201
   Note over API,RS: If no bed is free, requestRoom throws IllegalStateException. The student stays saved and the answer carries roomMessage instead of roomId.
 ```
+
+## 15. State diagram: an account (sign-up and approval)
+```mermaid
+stateDiagram-v2
+  [*] --> ACTIVE : sign up as student
+  [*] --> PENDING : sign up as staff or admin
+  PENDING --> ACTIVE : administrator approves
+  PENDING --> REJECTED : administrator declines
+  ACTIVE --> REJECTED : administrator switches off, open sessions end
+  REJECTED --> ACTIVE : administrator approves again
+```
+Only `ACTIVE` accounts can sign in. Nobody can change their own account, and the owner account `admin` is rewritten from `.env` at every start.

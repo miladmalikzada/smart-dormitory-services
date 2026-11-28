@@ -52,4 +52,10 @@ class RoomAdminServiceTest {
         assertEquals(List.of("S1"), bigger.occupants());
         assertEquals(4, bigger.freeBeds());
     }
+
+    @Test void aRoomWithResidentsCannotBeDeleted() {
+        admin.create("R301", 2).assign("S1");
+        assertThrows(IllegalStateException.class, () -> admin.delete("R301"));
+        assertEquals(1, admin.list().size());
+    }
 }

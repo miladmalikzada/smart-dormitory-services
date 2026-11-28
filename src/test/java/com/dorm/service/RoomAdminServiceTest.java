@@ -24,4 +24,11 @@ class RoomAdminServiceTest {
         assertThrows(IllegalStateException.class, () -> admin.create("R301", 3));
         assertEquals(2, admin.get("R301").capacity());
     }
+
+    @Test void roomNumberMustNotBeBlank() {
+        assertThrows(IllegalArgumentException.class, () -> admin.create("", 2));
+        assertThrows(IllegalArgumentException.class, () -> admin.create("   ", 2));
+        assertThrows(IllegalArgumentException.class, () -> admin.create(null, 2));
+        assertTrue(admin.list().isEmpty());
+    }
 }

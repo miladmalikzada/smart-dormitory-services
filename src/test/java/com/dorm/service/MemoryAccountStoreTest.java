@@ -31,4 +31,11 @@ class MemoryAccountStoreTest {
         assertEquals(1, store.all().size());
         assertEquals(AccountStatus.REJECTED, store.find("aida").orElseThrow().status());
     }
+
+    @Test void allAccountsComeBackInTheOrderTheyWereSaved() {
+        store.save(account("aida"));
+        store.save(account("maria"));
+        store.save(account("timur"));
+        assertEquals(List.of("aida", "maria", "timur"), store.all().stream().map(AccountRecord::username).toList());
+    }
 }

@@ -23,3 +23,7 @@ Practise: branch -> test first -> class -> PR -> merge, in under 20 minutes, in 
 * Why is there no Singleton? Where are the objects created?
 * What does `ArchitectureTest` stop a teammate from doing?
 * Which patterns did you consider and reject, and why?
+
+## Two more questions, with answers
+**Why can staff look at rooms but not change them, and where is that rule?**
+In `SecuredRoomAdminService`, a Protection Proxy. It implements the same `RoomAdminOperations` interface as `RoomAdminService`, so `Api` cannot tell them apart. Reading is passed through; adding, resizing and deleting call `requireAdmin()` first and throw `AccessDeniedException`, which the API turns into 403. The room rules themselves (no deleting a room that has residents) stay in `RoomAdminService`, so there is no `if (role ...)` inside it. See ADR-0014 and `SecuredRoomAdminServiceTest`.

@@ -11,6 +11,7 @@ Base URL: `http://localhost:8080/api`. Data format: JSON. Every request except `
 | `POST /api/accounts/{username}/approve` | administrator only: lets a waiting or switched-off account sign in |
 | `POST /api/accounts/{username}/reject` | administrator only: declines a request or switches an account off and ends its sessions. You cannot change your own account (**400**) |
 | `GET /api/me` | who am I (needs token) |
+| `POST /api/accounts/{user}/reset-password` | administrator only (others **403**). Gives that account a new random 12-character temporary password and returns `{username, temporaryPassword}` once. The old password stops working, the account's open sessions end and its lockout is cleared. Own account: **400** (use change password); unknown account: **404** |
 | `POST /api/me/password` `{oldPassword, newPassword}` | changes your own password. Returns **200** `{changed:true}`. Wrong current password: **403** (counts toward the 5-attempt lockout, **429**); new password under 8 characters or equal to the old one: **400**. Your other sessions end, this one stays |
 | `POST /api/logout` | invalidates the token |
 

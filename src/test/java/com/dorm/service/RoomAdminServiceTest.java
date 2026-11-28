@@ -67,4 +67,10 @@ class RoomAdminServiceTest {
         admin.delete("R301");
         assertTrue(admin.list().isEmpty());
     }
+
+    @Test void unknownRoomsAreReportedAsNotFound() {
+        assertThrows(NotFoundException.class, () -> admin.get("NOPE"));
+        assertThrows(NotFoundException.class, () -> admin.updateCapacity("NOPE", 2));
+        assertThrows(NotFoundException.class, () -> admin.delete("NOPE"));
+    }
 }

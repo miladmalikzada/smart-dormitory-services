@@ -168,4 +168,11 @@ class AuthServiceTest {
         assertThrows(AuthenticationException.class, () -> auth.login("admin", "brand-new-pass"));   // nothing was changed
         assertNotNull(auth.login("admin", "correct-horse"));
     }
+
+    @Test void newPasswordMustBeLongEnoughAndDifferent() {
+        String token = auth.login("admin", "correct-horse").token();
+        assertThrows(IllegalArgumentException.class, () -> auth.changePassword("admin", token, "correct-horse", "short"));
+        assertThrows(IllegalArgumentException.class, () -> auth.changePassword("admin", token, "correct-horse", "correct-horse"));
+        assertNotNull(auth.login("admin", "correct-horse"));   // nothing changed
+    }
 }

@@ -31,4 +31,9 @@ class RoomAdminServiceTest {
         assertThrows(IllegalArgumentException.class, () -> admin.create(null, 2));
         assertTrue(admin.list().isEmpty());
     }
+
+    @Test void capacityBelowOneIsRefusedAndRoomNumbersAreTrimmed() {
+        assertThrows(IllegalArgumentException.class, () -> admin.create("R301", 0));
+        assertEquals("R302", admin.create("  R302 ", 2).id());
+    }
 }

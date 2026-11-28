@@ -207,6 +207,21 @@ public class AuthService {
         sessions.entrySet().removeIf(e -> e.getValue().username().equals(user) && !e.getKey().equals(keepToken));
     }
 
+    /**
+     * Lets an administrator give another account a new random password, for example after the owner forgot it.
+     * The temporary password is returned once and is never stored in clear text.
+     * @throws IllegalArgumentException when the administrator tries to reset their own account (use changePassword)
+     * @throws NotFoundException when there is no such account
+     */
+    public synchronized String resetPassword(String actor, String username) {
+        AccountRecord a = target(actor, username);
+        String temporary = generateTemporaryPassword();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        accounts.save(new AccountRecord(a.username(), salt, hash(temporary, salt), a.role(), a.status(), a.createdAt()));
+        return temporary;
+    }
+
     /** A random password for {@link #resetPassword}, made with the same SecureRandom as the salts. */
     String generateTemporaryPassword() {
         StringBuilder sb = new StringBuilder(TEMPORARY_PASSWORD_LENGTH);

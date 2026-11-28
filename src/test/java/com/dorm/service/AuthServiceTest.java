@@ -202,4 +202,20 @@ class AuthServiceTest {
         assertNotEquals(a, b);
         assertTrue(a.matches("[a-zA-Z2-9]+") && !a.matches(".*[lIO].*"), a);
     }
+
+    @Test void resetGivesATemporaryPasswordAndTheOldOneStops() {
+        auth.signUp("aida", "aida-pass-1", Role.STUDENT);
+        String temporary = auth.resetPassword("admin", "aida");
+        assertNotNull(auth.login("aida", temporary));
+        assertThrows(AuthenticationException.class, () -> auth.login("aida", "aida-pass-1"));
+    }
+
+    @Test void resetKeepsRoleAndStatus() {
+        auth.signUp("maria", "long-enough-1", Role.STAFF);
+        auth.approve("admin", "maria");
+        auth.resetPassword("admin", "maria");
+        AccountView v = auth.listAccounts().stream().filter(a -> a.username().equals("maria")).findFirst().orElseThrow();
+        assertEquals(Role.STAFF, v.role());
+        assertEquals(AccountStatus.ACTIVE, v.status());
+    }
 }

@@ -218,4 +218,11 @@ class AuthServiceTest {
         assertEquals(Role.STAFF, v.role());
         assertEquals(AccountStatus.ACTIVE, v.status());
     }
+
+    @Test void resetSignsTheUserOutEverywhere() {
+        auth.signUp("aida", "aida-pass-1", Role.STUDENT);
+        String token = auth.login("aida", "aida-pass-1").token();
+        auth.resetPassword("admin", "aida");
+        assertTrue(auth.authenticate(token).isEmpty());
+    }
 }

@@ -219,6 +219,7 @@ public class AuthService {
         byte[] salt = new byte[16];
         random.nextBytes(salt);
         accounts.save(new AccountRecord(a.username(), salt, hash(temporary, salt), a.role(), a.status(), a.createdAt()));
+        sessions.values().removeIf(s -> s.username().equals(a.username()));
         return temporary;
     }
 

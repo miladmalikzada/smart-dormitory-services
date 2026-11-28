@@ -29,6 +29,8 @@ public class WebServer {
 
     public WebServer(Api api, int port) throws IOException {
         this.api = api;
+        // No executor is set on purpose: the JDK then handles requests one after another. Api and the services
+        // are not thread-safe and rely on that (see RoomRequestConcurrencyTest). A thread pool would need locks first.
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/api", this::handleApi);
         server.createContext("/", this::handleStatic);

@@ -46,3 +46,7 @@ Each criterion names who acts, what they do and the result you can check (a stat
 ### US5 - Assign, start and resolve tickets
 * When staff assign an OPEN ticket the status becomes ASSIGNED; start makes it IN_PROGRESS; resolve makes it RESOLVED.
 * When staff try to start a ticket that is still OPEN, the answer is 409 and the status stays OPEN.
+
+### US6 - Students must not change tickets
+* When a student tries to assign, start, resolve or delete a ticket, the answer is 403 and the ticket is unchanged.
+* A student can still create a ticket (US4) and read tickets.

@@ -53,7 +53,7 @@ Demo script: `1` register student → `2` request room → `3` undo it → `15` 
 
 ## Continuous integration and database (quick answers)
 * **CI:** [`.github/workflows/ci.yml`](.github/workflows/ci.yml). It runs `mvn verify` (tests, ArchUnit rules, 60% coverage gate) on every push and pull request. Results: the **Actions** tab; the badge above shows the status.
-* **Database:** SQLite through JDBC. Schema: [`src/main/resources/schema.sql`](src/main/resources/schema.sql) (6 tables, keys, constraints, a view). ER diagram: [`docs/DATABASE.md`](docs/DATABASE.md). Code: `infra/SqliteDatabase`, `infra/SqliteRepositories`. Demo data: [`docs/sample_data.sql`](docs/sample_data.sql). The file `data/dorm.db` is created when the app runs with `--storage=sqlite` (it is not committed to Git).
+* **Database:** SQLite through JDBC. Schema: [`src/main/resources/schema.sql`](src/main/resources/schema.sql) (7 tables, keys, constraints, a view). ER diagram: [`docs/DATABASE.md`](docs/DATABASE.md). Code: `infra/SqliteDatabase`, `infra/SqliteRepositories`. Demo data: [`docs/sample_data.sql`](docs/sample_data.sql). The file `data/dorm.db` is created when the app runs with `--storage=sqlite` (it is not committed to Git).
 
 ## Domain
 * **Certificates** – staff download an accommodation certificate (text, HTML or CSV, a *strategy* per format) and export the student list as CSV; identity numbers are never printed on certificates.

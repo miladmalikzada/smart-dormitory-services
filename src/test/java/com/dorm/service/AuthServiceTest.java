@@ -150,4 +150,48 @@ class AuthServiceTest {
         auth.addAccount("owner2", "fresh-secret-1", Role.ADMIN);   // what App does for the .env admin at every start
         assertEquals(Role.ADMIN, auth.login("owner2", "fresh-secret-1").role());
     }
+
+    @Test void changedPasswordWorksAndTheOldOneStops() {
+        String token = auth.login("admin", "correct-horse").token();
+        auth.changePassword("admin", token, "correct-horse", "brand-new-pass");
+        assertNotNull(auth.login("admin", "brand-new-pass"));
+        assertThrows(AuthenticationException.class, () -> auth.login("admin", "correct-horse"));
+    }
+
+    @Test void wrongCurrentPasswordIsRefusedAndCountsTowardTheLockout() {
+        String token = auth.login("admin", "correct-horse").token();
+        for (int i = 0; i < AuthService.MAX_FAILURES; i++) {
+            assertThrows(AccessDeniedException.class, () -> auth.changePassword("admin", token, "nope", "brand-new-pass"));
+        }
+        assertThrows(RateLimitedException.class, () -> auth.changePassword("admin", token, "correct-horse", "brand-new-pass"));
+        clock.now = clock.now.plus(AuthService.LOCK_WINDOW).plus(Duration.ofSeconds(1));   // lock ends
+        assertThrows(AuthenticationException.class, () -> auth.login("admin", "brand-new-pass"));   // nothing was changed
+        assertNotNull(auth.login("admin", "correct-horse"));
+    }
+
+    @Test void newPasswordMustBeLongEnoughAndDifferent() {
+        String token = auth.login("admin", "correct-horse").token();
+        assertThrows(IllegalArgumentException.class, () -> auth.changePassword("admin", token, "correct-horse", "short"));
+        assertThrows(IllegalArgumentException.class, () -> auth.changePassword("admin", token, "correct-horse", "correct-horse"));
+        assertNotNull(auth.login("admin", "correct-horse"));   // nothing changed
+    }
+
+    @Test void otherSessionsEndButTheCurrentOneStays() {
+        String mine = auth.login("admin", "correct-horse").token();
+        String other = auth.login("admin", "correct-horse").token();
+        auth.changePassword("admin", mine, "correct-horse", "brand-new-pass");
+        assertTrue(auth.authenticate(mine).isPresent());
+        assertTrue(auth.authenticate(other).isEmpty());
+    }
+
+    @Test void roleAndStatusStayTheSameAfterAChange() {
+        auth.signUp("maria", "long-enough-1", Role.STAFF);
+        auth.approve("admin", "maria");
+        String token = auth.login("maria", "long-enough-1").token();
+        auth.changePassword("maria", token, "long-enough-1", "another-pass-2");
+        AuthService.Login again = auth.login("maria", "another-pass-2");
+        assertEquals(Role.STAFF, again.role());
+        assertEquals(AccountStatus.ACTIVE, auth.listAccounts().stream()
+                .filter(a -> a.username().equals("maria")).findFirst().orElseThrow().status());
+    }
 }

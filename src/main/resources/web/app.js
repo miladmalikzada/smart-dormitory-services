@@ -234,6 +234,17 @@ async function show(name) {
 
 /* ---------- student form (add / edit / view) ---------- */
 const field = (label, name, v, attrs = '') => `<label>${label}<input name="${name}" value="${esc(v)}" ${attrs}></label>`;
+function passwordForm() {
+  const owner = me.username === 'admin'
+    ? '<p class="muted">The owner account takes its password from the .env file when the server starts, so a new password here is replaced by the .env value after a restart.</p>' : '';
+  return `<form id="f-password"><div class="modal-body">${owner}
+    ${field('Current password', 'oldPassword', '', 'type="password" required autocomplete="current-password"')}
+    ${field('New password (8 characters or more)', 'newPassword', '', 'type="password" required minlength="8" maxlength="128" autocomplete="new-password"')}
+    ${field('Repeat the new password', 'confirmPassword', '', 'type="password" required minlength="8" maxlength="128" autocomplete="new-password"')}
+    </div><div class="modal-foot"><span class="form-error" id="password-error"></span>
+      <button type="button" data-action="close-modal">Cancel</button><button class="primary">Change password</button></div></form>`;
+}
+
 function studentForm(s) {
   const edit = !!s;
   s = s || {};
@@ -299,6 +310,7 @@ const actions = {
      <div class="modal-foot"><button type="button" data-action="close-modal">Close</button></div>`),
   'get-certificate': async d => { try { download(await api('GET', `/certificates/${d.id}/${d.format}`)); toast('Certificate downloaded'); } catch (e) { toast(e.message, true); } },
   'close-modal': () => closeModal(),
+  'change-password': () => openModal('Change password', passwordForm()),
   'goto': d => show(d.id),
   'approve-account': d => run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/approve'), 'Account approved'),
   'reject-account': d => confirm('Decline or switch off ' + d.id + '? They will be signed out.') && run(() => api('POST', '/accounts/' + encodeURIComponent(d.id) + '/reject'), 'Account switched off'),
@@ -370,6 +382,14 @@ document.addEventListener('submit', async e => {
       toast(msg);
       await show('students');
     } catch (err) { $('student-error').textContent = err.message; }
+  } else if (fid === 'f-password') {
+    const data = form(f);
+    if (data.newPassword !== data.confirmPassword) { $('password-error').textContent = 'The two new passwords do not match'; return; }
+    try {
+      await api('POST', '/me/password', { oldPassword: data.oldPassword, newPassword: data.newPassword });
+      closeModal();
+      toast('Password changed. Your other sessions were signed out.');
+    } catch (err) { $('password-error').textContent = err.message; }
   } else if (fid === 'login-form') {
     await login(f);
   } else if (fid === 'signup-form') {

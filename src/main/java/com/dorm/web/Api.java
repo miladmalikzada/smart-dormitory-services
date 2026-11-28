@@ -100,6 +100,12 @@ public class Api {
                 auth.logout(token);
                 return ok(Map.of("loggedOut", true));
             }
+            if (clean.equals("api/me/password")) {
+                if (!method.equals("POST")) return notAllowed();
+                Map<String, Object> b = Json.parseObject(bodyText);
+                auth.changePassword(who.username(), token, str(b, "oldPassword"), str(b, "newPassword"));
+                return ok(Map.of("changed", true));
+            }
             if (clean.equals("api/me")) {
                 Map<String, Object> me = loginJson(who);
                 me.remove("token");
@@ -111,6 +117,8 @@ public class Api {
             return error(401, e.getMessage());
         } catch (RateLimitedException e) {
             return error(429, e.getMessage());
+        } catch (AccessDeniedException e) {
+            return error(403, e.getMessage());
         } catch (NotFoundException e) {
             return error(404, e.getMessage());
         } catch (IllegalArgumentException e) {

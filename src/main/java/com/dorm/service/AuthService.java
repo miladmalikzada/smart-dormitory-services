@@ -140,9 +140,7 @@ public class AuthService {
     public synchronized Login login(String username, String password) {
         String user = normalize(username);
         Instant now = clock.instant();
-        Deque<Instant> recent = failures.computeIfAbsent(user, k -> new ArrayDeque<>());
-        while (!recent.isEmpty() && recent.peekFirst().isBefore(now.minus(LOCK_WINDOW))) recent.pollFirst();
-        if (recent.size() >= MAX_FAILURES) throw new RateLimitedException("Too many failed attempts. Try again in a minute.");
+        Deque<Instant> recent = recentFailures(user, now);
 
         AccountRecord a = accounts.find(user).orElse(null);
         // Always hash, even for unknown users, so response time does not reveal which usernames exist.
@@ -165,6 +163,14 @@ public class AuthService {
         return new Login(token, user, a.role(), expires);
     }
 
+    /** Wrong-password times of one username inside the lock window. Throws when the username is locked. */
+    private Deque<Instant> recentFailures(String user, Instant now) {
+        Deque<Instant> recent = failures.computeIfAbsent(user, k -> new ArrayDeque<>());
+        while (!recent.isEmpty() && recent.peekFirst().isBefore(now.minus(LOCK_WINDOW))) recent.pollFirst();
+        if (recent.size() >= MAX_FAILURES) throw new RateLimitedException("Too many failed attempts. Try again in a minute.");
+        return recent;
+    }
+
     /** @return the session's login data, or empty when the token is unknown or expired */
     public synchronized Optional<Login> authenticate(String token) {
         if (token == null) return Optional.empty();
@@ -172,6 +178,30 @@ public class AuthService {
         if (s == null) return Optional.empty();
         if (!s.expiresAt().isAfter(clock.instant())) { sessions.remove(token); return Optional.empty(); }
         return Optional.of(new Login(token, s.username(), s.role(), s.expiresAt()));
+    }
+
+    /**
+     * A signed-in user changes their own password. The current password must be right; a wrong one counts toward
+     * the same lockout as a wrong login. Every other session of this user ends, the one that made the change stays.
+     * @throws AccessDeniedException when the current password is wrong
+     */
+    public synchronized void changePassword(String username, String keepToken, String oldPassword, String newPassword) {
+        String user = normalize(username);
+        checkPassword(newPassword);
+        Instant now = clock.instant();
+        Deque<Instant> recent = recentFailures(user, now);
+        AccountRecord a = accounts.find(user).orElseThrow(() -> new NotFoundException("No account named " + user));
+        byte[] candidate = hash(oldPassword == null ? "" : oldPassword, a.salt());
+        if (!MessageDigest.isEqual(candidate, a.hash())) {
+            recent.addLast(now);
+            throw new AccessDeniedException("Current password is wrong");
+        }
+        if (newPassword.equals(oldPassword)) throw new IllegalArgumentException("The new password must be different from the current one");
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        accounts.save(new AccountRecord(a.username(), salt, hash(newPassword, salt), a.role(), a.status(), a.createdAt()));
+        recent.clear();
+        sessions.entrySet().removeIf(e -> e.getValue().username().equals(user) && !e.getKey().equals(keepToken));
     }
 
     public synchronized void logout(String token) { if (token != null) sessions.remove(token); }

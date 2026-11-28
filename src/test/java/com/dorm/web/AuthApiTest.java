@@ -166,4 +166,34 @@ class AuthApiTest {
         assertEquals(401, other.handleRequest("POST", "/api/login", "{\"username\":\"staff\",\"password\":\"staff-pass-1\"}", null).status());
         assertEquals(401, other.handleRequest("POST", "/api/login", "{\"username\":\"student\",\"password\":\"student-pass-1\"}", null).status());
     }
+
+    // ---- change password ----
+
+    private Api.Response changePassword(String token, String oldPassword, String newPassword) {
+        return api.handleRequest("POST", "/api/me/password",
+                "{\"oldPassword\":\"" + oldPassword + "\",\"newPassword\":\"" + newPassword + "\"}",
+                token == null ? null : "Bearer " + token);
+    }
+
+    @Test void aUserCanChangeTheirOwnPassword() {
+        String student = account("aida", "STUDENT");
+        assertEquals(200, changePassword(student, "aida-pass-1", "aida-new-pass-2").status());
+        assertEquals(200, get("/api/me", student).status());   // this session stays open
+        assertNotNull(token("aida", "aida-new-pass-2"));
+        assertEquals(401, api.handleRequest("POST", "/api/login", "{\"username\":\"aida\",\"password\":\"aida-pass-1\"}", null).status());
+    }
+
+    @Test void changePasswordGivesClearErrors() {
+        String student = account("aida", "STUDENT");
+        assertEquals(403, changePassword(student, "not-my-password", "aida-new-pass-2").status());   // wrong current password
+        assertEquals(400, changePassword(student, "aida-pass-1", "short").status());
+        assertEquals(400, changePassword(student, "aida-pass-1", "aida-pass-1").status());           // same as before
+        assertEquals(200, get("/api/me", student).status());   // a wrong guess does not sign the user out
+    }
+
+    @Test void changePasswordNeedsASignedInUserAndPost() {
+        assertEquals(401, changePassword(null, "x", "long-enough-1").status());
+        assertEquals(401, changePassword("forged-token", "x", "long-enough-1").status());
+        assertEquals(405, get("/api/me/password", account("aida", "STUDENT")).status());
+    }
 }

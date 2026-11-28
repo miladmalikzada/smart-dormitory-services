@@ -19,6 +19,7 @@
 | US15 | As the administrator I decide who becomes staff or admin | Staff/admin sign-ups stay PENDING and cannot sign in until I approve them; a declined account is refused; nobody can approve themselves |
 | US16 | As the administrator I add rooms and set how many beds each has | Only ADMIN can add, resize or delete a room; staff and students get 403 but can look at rooms |
 | US17 | As the administrator I want a new student to get a room straight away | With "give a room automatically" ticked, the student is placed in the room with most free beds; if the dormitory is full the student is still saved and I see a clear message |
+| US18 | As a signed-in user I change my own password | Needs the current password; the old password stops working; my other sessions are signed out |
 
 ## Acceptance criteria
 
@@ -101,3 +102,9 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * When "give a room automatically" is ticked, the saved student is placed in the room with the most free beds and the answer names that room.
 * When the dormitory is full, the student is still saved and the answer carries a clear message that no room was free.
 * When the box is not ticked, the student is saved without a room.
+
+### US18 - Change my own password
+* When a signed-in user sends the right current password and a new password of 8 or more characters, the answer is 200 and the new password works at the next sign-in.
+* After the change the old password is refused (401 at sign-in), and the user's other sessions are signed out while the current one stays open.
+* A wrong current password gets 403 and changes nothing; five wrong tries in a minute lock the username (429), the same as at sign-in.
+* A new password that is shorter than 8 characters, or the same as the old one, gets 400.

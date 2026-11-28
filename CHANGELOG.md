@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - change password
+
+* Signed-in users can change their own password: `POST /api/me/password` and a form on the website.
+  The current password is required, wrong tries count toward the login lockout, and other sessions end.
+* Known limitation 3 now only lists password *reset*.
+
 ## Unreleased - floor allocation strategy
 
 * New `FloorStrategy`: fills one floor before the next (floor read from the room id, R101 is floor 1).

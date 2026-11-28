@@ -140,9 +140,7 @@ public class AuthService {
     public synchronized Login login(String username, String password) {
         String user = normalize(username);
         Instant now = clock.instant();
-        Deque<Instant> recent = failures.computeIfAbsent(user, k -> new ArrayDeque<>());
-        while (!recent.isEmpty() && recent.peekFirst().isBefore(now.minus(LOCK_WINDOW))) recent.pollFirst();
-        if (recent.size() >= MAX_FAILURES) throw new RateLimitedException("Too many failed attempts. Try again in a minute.");
+        Deque<Instant> recent = recentFailures(user, now);
 
         AccountRecord a = accounts.find(user).orElse(null);
         // Always hash, even for unknown users, so response time does not reveal which usernames exist.
@@ -163,6 +161,14 @@ public class AuthService {
         Instant expires = now.plus(TOKEN_LIFETIME);
         sessions.put(token, new Session(user, a.role(), expires));
         return new Login(token, user, a.role(), expires);
+    }
+
+    /** Wrong-password times of one username inside the lock window. Throws when the username is locked. */
+    private Deque<Instant> recentFailures(String user, Instant now) {
+        Deque<Instant> recent = failures.computeIfAbsent(user, k -> new ArrayDeque<>());
+        while (!recent.isEmpty() && recent.peekFirst().isBefore(now.minus(LOCK_WINDOW))) recent.pollFirst();
+        if (recent.size() >= MAX_FAILURES) throw new RateLimitedException("Too many failed attempts. Try again in a minute.");
+        return recent;
     }
 
     /** @return the session's login data, or empty when the token is unknown or expired */

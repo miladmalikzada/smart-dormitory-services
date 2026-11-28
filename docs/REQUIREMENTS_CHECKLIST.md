@@ -18,7 +18,7 @@
 
 ## 10-minute plan
 1. (1 min) Problem and architecture slide.
-2. (4 min) Website live demo: sign in as admin, add a student with IIN and passport, request room, undo, report problem, sign in as staff (masked IIN) and resolve it, post announcement, visitor arrives and leaves. Point out the activity feed on the dashboard.
+2. (4 min) Website live demo: sign up as a student and as staff, approve the staff account as admin, sign in as admin, add a student with IIN and passport, request room, undo, report problem, sign in as staff (masked IIN) and resolve it, post announcement, visitor arrives and leaves. Point out the activity feed on the dashboard.
 3. (2 min) Database: `python3 scripts/show-db.py` shows the same data in SQLite tables, and the database refusing invalid data.
 4. (1 min) API: one curl command and the endpoint table.
 5. (2 min) GitHub: pull requests with reviews, each member's commits, green CI, tags.

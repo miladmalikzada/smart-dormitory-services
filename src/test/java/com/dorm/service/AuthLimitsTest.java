@@ -46,4 +46,12 @@ class AuthLimitsTest {
         minutePasses();
         assertEquals("onemore", auth.signUp("onemore", "long-enough-1", Role.STUDENT).username());
     }
+
+    @Test void tooManyStaffRequestsAreRefusedButStudentsCanStillSignUp() {
+        signUpMany("staff", AuthService.MAX_PENDING, Role.STAFF);
+        minutePasses();
+        assertThrows(RateLimitedException.class, () -> auth.signUp("staffextra", "long-enough-1", Role.STAFF));
+        assertThrows(RateLimitedException.class, () -> auth.signUp("adminextra", "long-enough-1", Role.ADMIN));
+        assertEquals("student1", auth.signUp("student1", "long-enough-1", Role.STUDENT).username());
+    }
 }

@@ -35,4 +35,13 @@ class SecuredRoomAdminServiceTest {
         assertThrows(AccessDeniedException.class, () -> rooms.delete("R301"));
         assertEquals(2, rooms.get("R301").capacity());   // nothing changed
     }
+
+    @Test void studentsMayLookAtRoomsButNotChangeThem() {
+        rooms.create("R301", 2);
+        session.switchTo(Role.STUDENT);
+        assertEquals(1, rooms.list().size());
+        assertThrows(AccessDeniedException.class, () -> rooms.create("R302", 2));
+        assertThrows(AccessDeniedException.class, () -> rooms.delete("R301"));
+        assertEquals(1, rooms.list().size());
+    }
 }

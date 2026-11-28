@@ -36,4 +36,9 @@ class FloorStrategyTest {
         List<Room> rooms = List.of(room("R101", 3, 2), room("R102", 3, 0), room("R201", 3, 0));
         assertEquals("R101", new FloorStrategy().choose(rooms).orElseThrow().id());
     }
+
+    @Test void insideAFloorTheSmallestRoomIdIsUsedFirst() {
+        List<Room> rooms = List.of(room("R103", 2, 0), room("R102", 2, 0));
+        assertEquals("R102", new FloorStrategy().choose(rooms).orElseThrow().id());
+    }
 }

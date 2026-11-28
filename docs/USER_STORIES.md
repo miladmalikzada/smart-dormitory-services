@@ -59,3 +59,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * After a departure is recorded, that visitor no longer appears in the "inside" list.
 * Recording the departure of the same visit twice gives 409.
 * The "inside" list keeps visitors in the order they arrived.
+
+### US9 - Post an announcement
+* A posted announcement appears in the announcement list with its title and text.
+* When the announcement is posted, the message is delivered on both channels (console and SMS).
+* After the administrator edits the text, the list shows the new text.

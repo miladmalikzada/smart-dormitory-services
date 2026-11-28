@@ -72,3 +72,7 @@ Each criterion names who acts, what they do and the result you can check (a stat
 ### US11 - Staff see masked identity numbers
 * When staff read a student, the IIN, passport and national ID show only the last four characters, for example ********1237.
 * When the administrator reads the same student, the full values are shown.
+
+### US12 - Students see only the directory
+* When a student reads the student directory, no response contains an IIN, passport number, national ID, phone, e-mail or address.
+* The directory still shows each student's name so residents can be found.

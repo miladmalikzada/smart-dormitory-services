@@ -68,3 +68,7 @@ Each criterion names who acts, what they do and the result you can check (a stat
 ### US10 - Keep data between runs
 * With file or SQLite storage, rooms, tickets and announcements saved before a restart are present after it, with the same ids and text.
 * With SQLite storage, a ticket that points to a room that does not exist is refused by the database itself.
+
+### US11 - Staff see masked identity numbers
+* When staff read a student, the IIN, passport and national ID show only the last four characters, for example ********1237.
+* When the administrator reads the same student, the full values are shown.

@@ -64,3 +64,7 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * A posted announcement appears in the announcement list with its title and text.
 * When the announcement is posted, the message is delivered on both channels (console and SMS).
 * After the administrator edits the text, the list shows the new text.
+
+### US10 - Keep data between runs
+* With file or SQLite storage, rooms, tickets and announcements saved before a restart are present after it, with the same ids and text.
+* With SQLite storage, a ticket that points to a room that does not exist is refused by the database itself.

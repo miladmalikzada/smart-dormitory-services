@@ -37,3 +37,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 ### US3 - Undo the last room action
 * After a room request, undoing it leaves the room's occupants exactly as they were before the request.
 * When there is nothing left to undo, the answer says so and nothing changes.
+
+### US4 - Report a problem in a room
+* When a student reports a problem for an existing room with priority "high", a ticket is created with status OPEN and the priority "high".
+* When the room does not exist, the answer is 404 and no ticket is created.
+* When the priority is not one of the allowed values, the answer is 400.

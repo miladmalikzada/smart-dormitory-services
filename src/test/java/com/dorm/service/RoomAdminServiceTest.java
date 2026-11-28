@@ -58,4 +58,13 @@ class RoomAdminServiceTest {
         assertThrows(IllegalStateException.class, () -> admin.delete("R301"));
         assertEquals(1, admin.list().size());
     }
+
+    @Test void aRoomWithTicketsCannotBeDeletedUntilTheTicketsAreGone() {
+        admin.create("R301", 2);
+        tickets.save(MaintenanceTicket.builder().id("T1").roomId("R301").description("Leak").build());
+        assertThrows(IllegalStateException.class, () -> admin.delete("R301"));
+        tickets.delete("T1");
+        admin.delete("R301");
+        assertTrue(admin.list().isEmpty());
+    }
 }

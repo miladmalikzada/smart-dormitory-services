@@ -182,4 +182,12 @@ class AuthApiTest {
         assertNotNull(token("aida", "aida-new-pass-2"));
         assertEquals(401, api.handleRequest("POST", "/api/login", "{\"username\":\"aida\",\"password\":\"aida-pass-1\"}", null).status());
     }
+
+    @Test void changePasswordGivesClearErrors() {
+        String student = account("aida", "STUDENT");
+        assertEquals(403, changePassword(student, "not-my-password", "aida-new-pass-2").status());   // wrong current password
+        assertEquals(400, changePassword(student, "aida-pass-1", "short").status());
+        assertEquals(400, changePassword(student, "aida-pass-1", "aida-pass-1").status());           // same as before
+        assertEquals(200, get("/api/me", student).status());   // a wrong guess does not sign the user out
+    }
 }

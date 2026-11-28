@@ -19,3 +19,12 @@
 | US15 | As the administrator I decide who becomes staff or admin | Staff/admin sign-ups stay PENDING and cannot sign in until I approve them; a declined account is refused; nobody can approve themselves |
 | US16 | As the administrator I add rooms and set how many beds each has | Only ADMIN can add, resize or delete a room; staff and students get 403 but can look at rooms |
 | US17 | As the administrator I want a new student to get a room straight away | With "give a room automatically" ticked, the student is placed in the room with most free beds; if the dormitory is full the student is still saved and I see a clear message |
+
+## Acceptance criteria
+
+Each criterion names who acts, what they do and the result you can check (a status code, a value in a list or a stored value). The tests named in `docs/PATTERN_REGISTER.md` and `docs/REQUIREMENTS_CHECKLIST.md` cover them.
+
+### US1 - Register a student
+* When an administrator sends first name, last name, date of birth 2004-05-17 and IIN 040517501237, the answer is 201 and the student appears in the student list.
+* When the IIN has a wrong check digit, or its date does not match the date of birth, the answer is 400 and nothing is saved.
+* When a second student is sent with an IIN that is already stored, the answer is 409.

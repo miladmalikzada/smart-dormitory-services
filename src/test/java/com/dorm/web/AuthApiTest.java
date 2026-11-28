@@ -190,4 +190,10 @@ class AuthApiTest {
         assertEquals(400, changePassword(student, "aida-pass-1", "aida-pass-1").status());           // same as before
         assertEquals(200, get("/api/me", student).status());   // a wrong guess does not sign the user out
     }
+
+    @Test void changePasswordNeedsASignedInUserAndPost() {
+        assertEquals(401, changePassword(null, "x", "long-enough-1").status());
+        assertEquals(401, changePassword("forged-token", "x", "long-enough-1").status());
+        assertEquals(405, get("/api/me/password", account("aida", "STUDENT")).status());
+    }
 }

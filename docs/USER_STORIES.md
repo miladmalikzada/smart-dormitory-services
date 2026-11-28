@@ -96,3 +96,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * When the administrator adds a room with a name and a number of beds, it appears in the room list with that capacity.
 * When staff or a student try to add, resize or delete a room, the answer is 403; they can still look at rooms.
 * A room cannot get a capacity below 1.
+
+### US17 - A new student gets a room straight away
+* When "give a room automatically" is ticked, the saved student is placed in the room with the most free beds and the answer names that room.
+* When the dormitory is full, the student is still saved and the answer carries a clear message that no room was free.
+* When the box is not ticked, the student is saved without a room.

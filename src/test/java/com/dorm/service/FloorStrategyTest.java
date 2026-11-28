@@ -25,4 +25,9 @@ class FloorStrategyTest {
         List<Room> rooms = List.of(room("R201", 3, 0), room("R101", 3, 1));
         assertEquals("R101", new FloorStrategy().choose(rooms).orElseThrow().id());
     }
+
+    @Test void movesToTheNextFloorWhenTheFloorIsFull() {
+        List<Room> rooms = List.of(room("R101", 1, 1), room("R102", 2, 2), room("R201", 3, 0));
+        assertEquals("R201", new FloorStrategy().choose(rooms).orElseThrow().id());
+    }
 }

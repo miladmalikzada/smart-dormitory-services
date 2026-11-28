@@ -42,3 +42,7 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * When a student reports a problem for an existing room with priority "high", a ticket is created with status OPEN and the priority "high".
 * When the room does not exist, the answer is 404 and no ticket is created.
 * When the priority is not one of the allowed values, the answer is 400.
+
+### US5 - Assign, start and resolve tickets
+* When staff assign an OPEN ticket the status becomes ASSIGNED; start makes it IN_PROGRESS; resolve makes it RESOLVED.
+* When staff try to start a ticket that is still OPEN, the answer is 409 and the status stays OPEN.

@@ -24,4 +24,11 @@ class MemoryAccountStoreTest {
         assertEquals("aida", store.find("aida").orElseThrow().username());
         assertTrue(store.find("ghost").isEmpty());
     }
+
+    @Test void savingTheSameUsernameReplacesTheAccount() {
+        store.save(account("aida"));
+        store.save(account("aida").withStatus(AccountStatus.REJECTED));
+        assertEquals(1, store.all().size());
+        assertEquals(AccountStatus.REJECTED, store.find("aida").orElseThrow().status());
+    }
 }

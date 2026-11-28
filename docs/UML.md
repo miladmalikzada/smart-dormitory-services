@@ -392,3 +392,68 @@ classDiagram
   CertificateFormat <|.. HtmlCertificateFormat
   CertificateFormat <|.. CsvCertificateFormat
 ```
+
+## 13. Class diagram: accounts and sign-up approval (dependency inversion)
+```mermaid
+classDiagram
+  class AuthService {
+    +signUp(username, password, role)
+    +login(username, password)
+    +authenticate(token)
+    +logout(token)
+    +listAccounts()
+    +approve(actor, username)
+    +reject(actor, username)
+    +changePassword(username, keepToken, old, new)
+    +addAccount(username, password, role)
+  }
+  class AccountStore {
+    <<interface>>
+    +find(username)
+    +save(account)
+    +all()
+  }
+  class MemoryAccountStore
+  class SqliteAccountStore
+  class AccountRecord {
+    <<record>>
+    username
+    salt
+    hash
+    role
+    status
+    createdAt
+    +withStatus(status)
+  }
+  class AccountView {
+    <<record>>
+    username
+    role
+    status
+    createdAt
+  }
+  class AccountStatus {
+    <<enumeration>>
+    ACTIVE
+    PENDING
+    REJECTED
+  }
+  class Role {
+    <<enumeration>>
+    STUDENT
+    STAFF
+    ADMIN
+  }
+  class Api {
+    +handleRequest(method, path, body, authorization)
+  }
+  AccountStore <|.. MemoryAccountStore
+  AccountStore <|.. SqliteAccountStore
+  AuthService --> AccountStore : keeps accounts in
+  AccountStore ..> AccountRecord
+  AccountRecord --> AccountStatus
+  AccountRecord --> Role
+  AuthService ..> AccountView : returns, never salt or hash
+  Api --> AuthService : sign-up, sign-in, account routes
+```
+The service layer only knows the `AccountStore` interface. SQLite (in `infra`) or memory plugs in from `App`, so `ArchitectureTest` keeps `service` free of `infra`.

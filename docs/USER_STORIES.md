@@ -76,3 +76,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 ### US12 - Students see only the directory
 * When a student reads the student directory, no response contains an IIN, passport number, national ID, phone, e-mail or address.
 * The directory still shows each student's name so residents can be found.
+
+### US13 - Everyone must sign in
+* A request without a valid token gets 401; so does a forged token or a non-Bearer header.
+* A wrong password gets 401 with a generic message that does not say whether the username exists.
+* After five wrong passwords for one username in a minute, the next attempt gets 429, even with the correct password.

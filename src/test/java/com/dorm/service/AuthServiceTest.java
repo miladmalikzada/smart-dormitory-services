@@ -183,4 +183,15 @@ class AuthServiceTest {
         assertTrue(auth.authenticate(mine).isPresent());
         assertTrue(auth.authenticate(other).isEmpty());
     }
+
+    @Test void roleAndStatusStayTheSameAfterAChange() {
+        auth.signUp("maria", "long-enough-1", Role.STAFF);
+        auth.approve("admin", "maria");
+        String token = auth.login("maria", "long-enough-1").token();
+        auth.changePassword("maria", token, "long-enough-1", "another-pass-2");
+        AuthService.Login again = auth.login("maria", "another-pass-2");
+        assertEquals(Role.STAFF, again.role());
+        assertEquals(AccountStatus.ACTIVE, auth.listAccounts().stream()
+                .filter(a -> a.username().equals("maria")).findFirst().orElseThrow().status());
+    }
 }

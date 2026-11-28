@@ -175,4 +175,12 @@ class AuthServiceTest {
         assertThrows(IllegalArgumentException.class, () -> auth.changePassword("admin", token, "correct-horse", "correct-horse"));
         assertNotNull(auth.login("admin", "correct-horse"));   // nothing changed
     }
+
+    @Test void otherSessionsEndButTheCurrentOneStays() {
+        String mine = auth.login("admin", "correct-horse").token();
+        String other = auth.login("admin", "correct-horse").token();
+        auth.changePassword("admin", mine, "correct-horse", "brand-new-pass");
+        assertTrue(auth.authenticate(mine).isPresent());
+        assertTrue(auth.authenticate(other).isEmpty());
+    }
 }

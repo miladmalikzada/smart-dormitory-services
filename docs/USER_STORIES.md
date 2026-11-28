@@ -86,3 +86,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * Signing up with role STUDENT and a password of at least 8 characters gives 201, status ACTIVE, and the student can sign in at once.
 * A username shorter than 3 characters, a short password, an unknown role or a name that is already taken is refused (400 or 409) and no account is created.
 * The database stores only a salt and a password hash; the password itself is never stored.
+
+### US15 - The administrator approves staff and admin accounts
+* A sign-up with role STAFF or ADMIN gets status PENDING and cannot sign in until the administrator approves it.
+* A rejected account stays unable to sign in.
+* Only the administrator can list, approve or reject accounts (others get 403), and nobody can reject their own account.

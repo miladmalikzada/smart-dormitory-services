@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - floor allocation strategy
+
+* New `FloorStrategy`: fills one floor before the next (floor read from the room id, R101 is floor 1).
+  It is not the default; to use it, change `new LeastOccupiedStrategy()` to `new FloorStrategy()` in `App.wire`.
+
 ## 1.3.1 - rooms and automatic room for new students
 - Fix: the *Add room* form on the Rooms page did nothing (an input called `id` hid the form's own id). Admins can add rooms and set their number of beds again.
 - Security: adding, resizing and deleting rooms is now ADMIN only (new `SecuredRoomAdminService`); before, any role could call the API. Staff and students see rooms read-only.

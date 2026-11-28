@@ -3,6 +3,7 @@ package com.dorm.service;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.dorm.domain.DormEvent;
+import com.dorm.infra.InMemoryRepository;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,5 +34,14 @@ class ExtensionPointTest {
         events.publish(new DormEvent("X", "fire drill"));
         assertEquals(1, factory.channel.pushed.size());
         assertTrue(factory.channel.pushed.get(0).contains("fire drill"));
+    }
+
+    @Test void floorStrategyPlugsIntoRoomServiceWithoutChangingIt() {
+        RoomService service = new RoomService(new InMemoryRepository<>(), new InMemoryRepository<>(),
+                new FloorStrategy(), new CommandHistory(), new EventPublisher());
+        service.addRoom("R201", 2);
+        service.addRoom("R101", 1);
+        assertEquals("R101", service.requestRoom(service.registerStudent("Ayan", "1").id()).id());
+        assertEquals("R201", service.requestRoom(service.registerStudent("Dana", "2").id()).id());
     }
 }

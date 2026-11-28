@@ -54,3 +54,8 @@ Each criterion names who acts, what they do and the result you can check (a stat
 ### US7 - Record a visitor arriving
 * When the host student exists, the arrival is recorded and the visitor is listed as inside.
 * When the host id does not exist, the answer is 404 and no visit is recorded.
+
+### US8 - Record a departure and list visitors still inside
+* After a departure is recorded, that visitor no longer appears in the "inside" list.
+* Recording the departure of the same visit twice gives 409.
+* The "inside" list keeps visitors in the order they arrived.

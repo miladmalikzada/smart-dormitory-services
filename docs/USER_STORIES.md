@@ -33,3 +33,7 @@ Each criterion names who acts, what they do and the result you can check (a stat
 * When a room has a free bed and a student requests a room, the student id appears in that room's occupants.
 * When every bed in every room is taken, the request fails with an error and no room changes.
 * When a student who already has a room asks again, the request fails and the student keeps the first room.
+
+### US3 - Undo the last room action
+* After a room request, undoing it leaves the room's occupants exactly as they were before the request.
+* When there is nothing left to undo, the answer says so and nothing changes.
